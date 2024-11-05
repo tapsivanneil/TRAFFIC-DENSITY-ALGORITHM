@@ -6,6 +6,7 @@ import torch
 import time
 import threading
 import logging
+import os
 
 # This removes the output of ultralytics
 logging.getLogger('ultralytics').setLevel(logging.WARNING)
@@ -51,6 +52,9 @@ lane_3_color = 0
 lane_4_color = 0
 
 fps = 0
+highest_fps = 0
+lowest_fps = 0
+
 inference = 0
 
 # Define the position for the text
@@ -290,7 +294,6 @@ def process_video(img):
     return class_values, total_units
 
 def show_output():
-    global fps
     while True:
         imgList = []
         for i, video_source in enumerate(video_sources):
@@ -303,7 +306,7 @@ def show_output():
             source_values[i]['total_units'] = total_units
             imgList.append(img)
 
-            fps += 1
+            set_fps()
 
             source_values[i]['source_percentage'] = (source_values[i]['total_units'] / max_units) * 100
             draw_class_texts(imgList[i], source_values[i]['class_values'])
@@ -330,12 +333,28 @@ def show_output():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+# PERFORMANCE TESTING
+
+
+def set_fps():
+    global fps, lowest_fps, highest_fps
+    fps += 1
+
+    if fps > highest_fps:
+        highest_fps = fps
+
+    if fps < lowest_fps:
+        lowest_fps = fps
 
 def get_fps():
-    global fps
+    global fps, lowest_fps, highest_fps
     while True:
         time.sleep(1)
-        print(f"FPS: {fps}", end="\r")
+        os.system('cls')
+        print(f"FPS: {fps}")
+        print(f"H-FPS: {highest_fps}")
+        # print(f"L-FPS: {lowest_fps}")
+        
         fps = 0
 
 threading.Thread(target=get_fps).start()
