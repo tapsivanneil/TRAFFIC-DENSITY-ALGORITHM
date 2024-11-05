@@ -15,7 +15,6 @@ source_values = [{} for _ in range(4)]
 max_units = 900
 seconds = 0
 
-first_instance = True
 focused_lane = 1
 green_light_timer = 0
 
@@ -51,6 +50,9 @@ lane_2_color = 0
 lane_3_color = 0
 lane_4_color = 0
 
+fps = 0
+inference = 0
+
 # Define the position for the text
 x, y = 10, 30
 spacing = 240  # Space between lines
@@ -71,7 +73,8 @@ video_sources = [
 model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
-# Function to draw text with variables
+# DISPLAY
+
 def draw_class_texts(img, values):
     for i, (class_name, value) in enumerate(zip(class_names, values)):
         text = f"{class_name}: {value}"
@@ -85,36 +88,24 @@ def draw_percentage_unit_text(img, percentage):
     traffic_density_text = f"Traffic Density: {percentage:.2f} %"
     cvzone.putTextRect(img, traffic_density_text, (x+ 6 * spacing, y ), scale=2, thickness=3, colorR=(0, 0, 0))
 
-def process_video(img):
-    results = model(img, stream=True)
-    class_values = [0] * 4
-    total_units = 0
+def draw_lane_timer(img, lane):
+    
+    traffic_timer = ""
 
-    for r in results:
-        boxes = r.boxes
-        for box in boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            w, h = x2 - x1, y2 - y1
-            cvzone.cornerRect(img, (x1, y1, w, h))
-            conf = math.ceil(box.conf[0] * 100) / 100
-            cls = int(box.cls[0])
+    if lane == 1:
+        traffic_timer = f"GREEN {lane_1_green_time} RED: {lane_1_red_time}"
+    elif lane == 2:
+        traffic_timer = f"GREEN {lane_2_green_time} RED: {lane_2_red_time}"
 
-            if cls == 0:
-                class_values[cls] += 1
-                total_units+= area_class_1
-            elif cls == 1:
-                class_values[cls] += 1
-                total_units+= area_class_2
-            elif cls == 2:
-                class_values[cls] += 1
-                total_units+= area_class_3
-            elif cls == 3:
-                class_values[cls] += 1
-                total_units+= area_class_4
+    elif lane == 3:
+        traffic_timer = f"GREEN {lane_3_green_time} RED: {lane_3_red_time}"
 
-            cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=2, thickness=3, colorR=(123, 17, 19))
-
-    return class_values, total_units
+    elif lane == 4:
+        traffic_timer = f"GREEN {lane_4_green_time} RED: {lane_4_red_time}"
+        
+    
+    
+    cvzone.putTextRect(img, traffic_timer, (x + 2 * 200, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
 
 def draw_lane_density(img, percentage):
     traffic_density_text = f"Traffic Lane Density: {percentage:.2f} %"
@@ -153,43 +144,11 @@ def draw_traffic_light(img, lane):
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
 
-def show_output():
-    while True:
-        imgList = []
-        for i, video_source in enumerate(video_sources):
-            success, img = video_source.read()
-            if not success:
-                break
-            
-            class_values, total_units = process_video(img)
-            source_values[i]['class_values'] = class_values
-            source_values[i]['total_units'] = total_units
-            imgList.append(img)
+def draw_fps(img):
+    global fps
+    cvzone.putTextRect(img, str(fps), (x + 2 * 200, y + 525), scale=2, thickness=3, colorR=(255, 0, 0))
 
-            source_values[i]['source_percentage'] = (source_values[i]['total_units'] / max_units) * 100
-            draw_class_texts(imgList[i], source_values[i]['class_values'])
-            draw_total_unit_text(imgList[i], source_values[i]['total_units'])
-            draw_percentage_unit_text(imgList[i], source_values[i]['source_percentage'])
-            draw_lane_timer(imgList[i], i+1)
-            draw_traffic_light(imgList[i], i+1)
-
-
-        traffic_lane_1_density = source_values[0]['source_percentage']
-        traffic_lane_2_density = source_values[1]['source_percentage']
-        traffic_lane_3_density = source_values[2]['source_percentage']
-        traffic_lane_4_density = source_values[3]['source_percentage']
-
-        traffic_lane_density = [traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density]
-
-        for i in range(4):
-            draw_lane_density(imgList[i], traffic_lane_density[i])
-
-
-        stackedImg = cvzone.stackImages(imgList, 2, 0.4)
-        cv2.imshow("stackedImg", stackedImg)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+#CALCULATION
 
 def get_traffic_lane_density(lane):
     return traffic_lane_density[lane]
@@ -294,29 +253,92 @@ def lane_timer(focused_lane):
                 f"LANE 3: {'GREEN' if focused_lane == 3 else 'RED'} {lane_3_green_time if focused_lane == 3 else lane_3_red_time} | "
                 f"LANE 4: {'GREEN' if focused_lane == 4 else 'RED'} {lane_4_green_time if focused_lane == 4 else lane_4_red_time}")
         
-        print(f"{output}")
+        # print(f"{output}")
     l   
 
-def draw_lane_timer(img, lane):
-    
-    traffic_timer = ""
+#MODEL AND PROCESS
 
-    if lane == 1:
-        traffic_timer = f"GREEN {lane_1_green_time} RED: {lane_1_red_time}"
-    elif lane == 2:
-        traffic_timer = f"GREEN {lane_2_green_time} RED: {lane_2_red_time}"
+def process_video(img):
+    results = model(img, stream=True)
+    class_values = [0] * 4
+    total_units = 0
 
-    elif lane == 3:
-        traffic_timer = f"GREEN {lane_3_green_time} RED: {lane_3_red_time}"
+    for r in results:
+        boxes = r.boxes
+        for box in boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            w, h = x2 - x1, y2 - y1
+            cvzone.cornerRect(img, (x1, y1, w, h))
+            conf = math.ceil(box.conf[0] * 100) / 100
+            cls = int(box.cls[0])
 
-    elif lane == 4:
-        traffic_timer = f"GREEN {lane_4_green_time} RED: {lane_4_red_time}"
-        
-    
-    
-    cvzone.putTextRect(img, traffic_timer, (x + 2 * 200, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
+            if cls == 0:
+                class_values[cls] += 1
+                total_units+= area_class_1
+            elif cls == 1:
+                class_values[cls] += 1
+                total_units+= area_class_2
+            elif cls == 2:
+                class_values[cls] += 1
+                total_units+= area_class_3
+            elif cls == 3:
+                class_values[cls] += 1
+                total_units+= area_class_4
+
+            cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=2, thickness=3, colorR=(123, 17, 19))
+
+    return class_values, total_units
+
+def show_output():
+    global fps
+    while True:
+        imgList = []
+        for i, video_source in enumerate(video_sources):
+            success, img = video_source.read()
+            if not success:
+                break
+            
+            class_values, total_units = process_video(img)
+            source_values[i]['class_values'] = class_values
+            source_values[i]['total_units'] = total_units
+            imgList.append(img)
+
+            fps += 1
+
+            source_values[i]['source_percentage'] = (source_values[i]['total_units'] / max_units) * 100
+            draw_class_texts(imgList[i], source_values[i]['class_values'])
+            draw_total_unit_text(imgList[i], source_values[i]['total_units'])
+            draw_percentage_unit_text(imgList[i], source_values[i]['source_percentage'])
+            draw_lane_timer(imgList[i], i+1)
+            draw_traffic_light(imgList[i], i+1)
+            # draw_fps(imgList[i])
+
+        traffic_lane_1_density = source_values[0]['source_percentage']
+        traffic_lane_2_density = source_values[1]['source_percentage']
+        traffic_lane_3_density = source_values[2]['source_percentage']
+        traffic_lane_4_density = source_values[3]['source_percentage']
+
+        traffic_lane_density = [traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density]
+
+        for i in range(4):
+            draw_lane_density(imgList[i], traffic_lane_density[i])
 
 
+        stackedImg = cvzone.stackImages(imgList, 2, 0.4)
+        cv2.imshow("stackedImg", stackedImg)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+
+def get_fps():
+    global fps
+    while True:
+        time.sleep(1)
+        print(f"FPS: {fps}", end="\r")
+        fps = 0
+
+threading.Thread(target=get_fps).start()
 threading.Thread(target=show_output).start()
 threading.Thread(target=lane_timer, args=(1,)).start()
 
