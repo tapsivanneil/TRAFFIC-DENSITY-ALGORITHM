@@ -31,7 +31,7 @@ lane_2_green_time = 10
 lane_3_green_time = 15
 lane_4_green_time = 20
 
-lane_1_red_time = lane_2_green_time + lane_3_green_time + lane_4_green_time
+lane_1_red_time = 0
 lane_2_red_time = lane_1_green_time
 lane_3_red_time = lane_1_green_time + lane_2_green_time 
 lane_4_red_time = lane_1_green_time + lane_2_green_time + lane_3_green_time
@@ -62,13 +62,13 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/vide0-source/video-source-1.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/vide0-source/video-source-2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/vide0-source/video-source-3.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/vide0-source/video-source-4.mp4'),
+    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
+    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
+    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
+    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
 ]
 
-model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/vehicle-detection-3.pt')
+model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # Function to draw text with variables
@@ -315,7 +315,6 @@ def draw_lane_timer(img, lane):
     
     
     cvzone.putTextRect(img, traffic_timer, (x + 2 * 200, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
-
 
 
 threading.Thread(target=show_output).start()
