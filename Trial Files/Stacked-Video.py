@@ -7,11 +7,34 @@ import time
 import threading
 import logging
 import os
+import serial
+import mysql.connector
+import time
+from datetime import datetime
 
 # This removes the output of ultralytics
 logging.getLogger('ultralytics').setLevel(logging.WARNING)
 
 # Initialize values
+
+mydb = mysql.connector.connect(
+    host = "localhost",
+    user = "root",
+    password = "cavitestateuniversity"
+)
+
+sql = mydb.cursor()
+sql.execute("SHOW DATABASES")
+for x in sql:
+    print(x)
+sql.execute("USE traffic_density")
+
+port = 'COM6'  # Replace with your port if different
+baudrate = 9600  # Standard baud rate for HC-06
+timeout = 1
+
+light_pattern = 0
+
 source_values = [{} for _ in range(4)]
 max_units = 900
 seconds = 0
@@ -62,6 +85,8 @@ x, y = 10, 30
 spacing = 240  # Space between lines
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# ser = serial.Serial(port, baudrate, timeout=timeout)
 
 video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
@@ -116,13 +141,18 @@ def draw_lane_density(img, percentage):
     cvzone.putTextRect(img, traffic_density_text, (x+ 5 * spacing, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
 
 def draw_traffic_light(img, lane):
+    global light_pattern
     if lane == 1:
         if lane_1_green_time >= 3 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            light_pattern = 1
         elif lane_1_green_time <= 3 and lane_1_green_time > 0 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            light_pattern = 2
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            light_pattern = 3
+
 
     elif lane == 2:
         if lane_2_green_time >= 3 and lane_2_red_time == 0:
@@ -204,9 +234,10 @@ def lane_timer(focused_lane):
     global lane_1_green_time, lane_2_green_time, lane_3_green_time, lane_4_green_time
     global lane_1_red_time, lane_2_red_time, lane_3_red_time, lane_4_red_time
     global traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density
+    
     while True:
         time.sleep(1)  # Simulate the passing of time
-
+        
         if focused_lane == 1:
             if lane_1_green_time > 0:
                 lane_1_green_time -= 1
@@ -263,7 +294,7 @@ def lane_timer(focused_lane):
 #MODEL AND PROCESS
 
 def process_video(img):
-    results = model(img, stream=True)
+    results = model.track(img, stream=True)
     class_values = [0] * 4
     total_units = 0
 
@@ -294,6 +325,7 @@ def process_video(img):
     return class_values, total_units
 
 def show_output():
+    # start_bluetooth_connection()
     while True:
         imgList = []
         for i, video_source in enumerate(video_sources):
@@ -335,7 +367,6 @@ def show_output():
 
 # PERFORMANCE TESTING
 
-
 def set_fps():
     global fps, lowest_fps, highest_fps
     fps += 1
@@ -353,11 +384,80 @@ def get_fps():
         os.system('cls')
         print(f"FPS: {fps}")
         print(f"H-FPS: {highest_fps}")
-        # print(f"L-FPS: {lowest_fps}")
+        # print(f"L-FPS: {lowest_fps}")insin     
         
         fps = 0
 
-threading.Thread(target=get_fps).start()
+# SEND SIGNAL TO ARDUINO
+
+def start_bluetooth_connection():
+    try:
+        time.sleep(2)  # Wait for the connection to be established
+        print("Connected to HC-06")
+    except serial.SerialException as e:
+        print(f"Error connecting to Bluetooth module: {e}")
+        exit()
+
+def change_light_pattern(num):
+    global light_pattern, ser
+    try:
+        while True:
+            ser.write(num.encode())
+
+    except KeyboardInterrupt:
+        print("\nInterrupted by user.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        ser.close()  # Close the serial connection
+        print("Serial connection closed.")
+
+
+# REPORT
+def check_minute():
+    last_minute = datetime.now().minute
+
+    while True:
+        time.sleep(1)
+        current_minute = datetime.now().minute
+
+        if current_minute != last_minute:
+            generate_report() 
+            last_minute = current_minute 
+
+def generate_report():
+    # print('minute has passed')
+    global source_values
+    now = datetime.now()
+
+    minute = now.minute          # Minute (0-59)
+    hour = now.hour              # Hour (0-23)
+    day = now.isoweekday() % 7   # Day (0-6, where 0 = Sunday, 6 = Saturday)
+    date = now.day               # Date (1-31)
+    month = now.month            # Month (1-12)
+    year = now.year              # Year (e.g., 2024)
+
+
+    # sql.execute('SHOW TABLES')
+    # for x in sql:
+    #     print(x)
+
+    for i in range(0,3):
+        sql.execute("""
+        INSERT INTO report (minute, hour, day, date, month, year, lane, density)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (minute, hour, day, date, month, year, i+1, source_values[i]['source_percentage']))
+
+
+    sql.execute('SELECT * FROM report')
+    for x in sql:
+        print(x)
+
+
+# threading.Thread(target=change_light_pattern).start()
+# threading.Thread(target=get_fps).start()
 threading.Thread(target=show_output).start()
 threading.Thread(target=lane_timer, args=(1,)).start()
+threading.Thread(target=check_minute, args=()).start()
+
 
