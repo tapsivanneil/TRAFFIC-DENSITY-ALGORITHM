@@ -42,8 +42,6 @@ seconds = 0
 focused_lane = 1
 green_light_timer = 0
 
-traffic_lane_density = []
-
 area_class_1 = 1.25
 area_class_2 = 6.6
 area_class_3 = 13.38
@@ -63,6 +61,8 @@ traffic_lane_1_density = 0
 traffic_lane_2_density = 0
 traffic_lane_3_density = 0
 traffic_lane_4_density = 0
+
+traffic_lane_density=[]
 
 light_pos = (100, 100, 50, 50)  # (x, y, width, height)
 colors = [(0, 0, 255), (0, 255, 255), (0, 255, 0)]  # Red, Yellow, Green
@@ -427,7 +427,6 @@ def check_minute():
 
 def generate_report():
     # print('minute has passed')
-    global source_values
     now = datetime.now()
 
     minute = now.minute          # Minute (0-59)
@@ -442,16 +441,19 @@ def generate_report():
     # for x in sql:
     #     print(x)
 
-    for i in range(0,3):
+    for i in range(4):
+        print(source_values[i]['source_percentage'])
+
         sql.execute("""
-        INSERT INTO report (minute, hour, day, date, month, year, lane, density)
+            INSERT INTO report (minute, hour, day, date, month, year, lane, density)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (minute, hour, day, date, month, year, i+1, source_values[i]['source_percentage']))
-
-
+        """, (minute, hour, day, date, month, year, i + 1, source_values[i]['source_percentage'])) 
+        
     sql.execute('SELECT * FROM report')
     for x in sql:
         print(x)
+
+    mydb.commit()
 
 
 # threading.Thread(target=change_light_pattern).start()

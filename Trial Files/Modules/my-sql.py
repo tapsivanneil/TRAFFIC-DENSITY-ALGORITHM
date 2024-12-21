@@ -7,16 +7,16 @@ mydb = mysql.connector.connect(
 )
 sql = mydb.cursor()
 sql.execute("USE traffic_density")
-# sql.execute('SHOW TABLES')
+sql.execute('SHOW TABLE status')
 
-# for x in sql:
-#     print(x)
+for x in sql:
+    print(x)
 
 sql.execute('SELECT * FROM report')
 for x in sql:
     print(x)
 
-# sql.execute("USE traffic_density")
+sql.execute("USE traffic_density")
 # sql.execute("""
 #     CREATE TABLE report (
 #         id INT PRIMARY KEY AUTO_INCREMENT,
@@ -27,7 +27,7 @@ for x in sql:
 #         month INT NOT NULL,
 #         year INT NOT NULL,
 #         lane INT NOT NULL,
-#         density FLOAT(3, 2) NOT NULL    
+#         density FLOAT(5,2) NOT NULL    
 #     )
 # """)
 
