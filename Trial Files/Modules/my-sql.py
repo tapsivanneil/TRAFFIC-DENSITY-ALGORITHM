@@ -5,8 +5,6 @@ mydb = mysql.connector.connect(
     user = "root",
     password = "cavitestateuniversity"
 )
-
-
 sql = mydb.cursor()
 sql.execute("USE traffic_density")
 # sql.execute('SHOW TABLES')
