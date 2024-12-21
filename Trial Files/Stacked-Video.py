@@ -184,9 +184,6 @@ def draw_fps(img):
 
 #CALCULATION
 
-def get_traffic_lane_density(lane):
-    return traffic_lane_density[lane]
-
 def calculate_timer(lane, density):
     if lane == 1:
         if density <= 33.333:
@@ -436,28 +433,16 @@ def generate_report():
     month = now.month            # Month (1-12)
     year = now.year              # Year (e.g., 2024)
 
-
-    # sql.execute('SHOW TABLES')
-    # for x in sql:
-    #     print(x)
-
     for i in range(4):
-        print(source_values[i]['source_percentage'])
-
         sql.execute("""
             INSERT INTO report (minute, hour, day, date, month, year, lane, density)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (minute, hour, day, date, month, year, i + 1, source_values[i]['source_percentage'])) 
         
-    sql.execute('SELECT * FROM report')
-    for x in sql:
-        print(x)
-
     mydb.commit()
 
-
 # threading.Thread(target=change_light_pattern).start()
-# threading.Thread(target=get_fps).start()
+threading.Thread(target=get_fps).start()
 threading.Thread(target=show_output).start()
 threading.Thread(target=lane_timer, args=(1,)).start()
 threading.Thread(target=check_minute, args=()).start()
