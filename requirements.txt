@@ -28,3 +28,5 @@ lap==0.4.0
 # PYTHORCH 12.1
 
 #need to uninstall torch torchaudio and torchvision when before installing pytorch
+# need install MySQL Server and Workbench
+pip install mysql-connector-python
