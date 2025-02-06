@@ -86,8 +86,6 @@ spacing = 240  # Space between lines
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# ser = serial.Serial(port, baudrate, timeout=timeout)
-
 video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
@@ -146,37 +144,58 @@ def draw_traffic_light(img, lane):
         if lane_1_green_time >= 3 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 1
+            print(light_pattern)
         elif lane_1_green_time <= 3 and lane_1_green_time > 0 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern = 2
+            print(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern = 3
+            print(light_pattern)
 
 
     elif lane == 2:
         if lane_2_green_time >= 3 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            light_pattern = 3
+            print(light_pattern)
         elif lane_2_green_time <= 3 and lane_2_green_time > 0 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            light_pattern = 4
+            print(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            light_pattern = 5
+            print(light_pattern)
 
     elif lane == 3:
         if lane_3_green_time >= 3 and lane_3_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            light_pattern = 5
+            print(light_pattern)
         elif lane_3_green_time <= 3 and lane_3_green_time > 0 and lane_3_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            light_pattern = 6
+            print(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            light_pattern = 7
+            print(light_pattern)
 
     elif lane == 4:
         if lane_4_green_time >= 3 and lane_4_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            light_pattern = 7
+            print(light_pattern)
         elif lane_4_green_time <= 3 and lane_4_green_time > 0 and lane_4_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            light_pattern = 8
+            print(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            light_pattern = 1
+            print(light_pattern)
 
 def draw_fps(img):
     global fps
@@ -291,7 +310,7 @@ def lane_timer(focused_lane):
 #MODEL AND PROCESS
 
 def process_video(img):
-    results = model.track(img, stream=True)
+    results = model(img, stream=True)
     class_values = [0] * 4
     total_units = 0
 
@@ -395,12 +414,16 @@ def start_bluetooth_connection():
         print(f"Error connecting to Bluetooth module: {e}")
         exit()
 
-def change_light_pattern(num):
-    global light_pattern, ser
+def change_light_pattern():
+    global light_pattern
+    
+    ser = serial.Serial(port, baudrate, timeout=timeout)
+
     try:
         while True:
-            ser.write(num.encode())
-
+            time.sleep(1)
+            ser.write(str(light_pattern).encode())
+            print(light_pattern)
     except KeyboardInterrupt:
         print("\nInterrupted by user.")
     except Exception as e:
@@ -439,10 +462,10 @@ def generate_report():
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (minute, hour, day, date, month, year, i + 1, source_values[i]['source_percentage'])) 
         
-    mydb.commit()
+    # mydb.commit() # comment for testing purposes
 
 # threading.Thread(target=change_light_pattern).start()
-threading.Thread(target=get_fps).start()
+# threading.Thread(target=get_fps).start()
 threading.Thread(target=show_output).start()
 threading.Thread(target=lane_timer, args=(1,)).start()
 threading.Thread(target=check_minute, args=()).start()
