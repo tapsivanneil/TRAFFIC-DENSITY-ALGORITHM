@@ -29,11 +29,13 @@ for x in sql:
     print(x)
 sql.execute("USE traffic_density")
 
-port = 'COM6'  # Replace with your port if different
+port = 'COM3'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
 light_pattern = 0
+light_pattern_list = []
+traffic_light_pattern = 0
 
 source_values = [{} for _ in range(4)]
 max_units = 900
@@ -91,13 +93,13 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
 ]
 
-model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
+model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # DISPLAY
@@ -139,63 +141,64 @@ def draw_lane_density(img, percentage):
     cvzone.putTextRect(img, traffic_density_text, (x+ 5 * spacing, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
 
 def draw_traffic_light(img, lane):
-    global light_pattern
+    global light_pattern, light_pattern_list, traffic_light_pattern
     if lane == 1:
         if lane_1_green_time >= 3 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 1
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         elif lane_1_green_time <= 3 and lane_1_green_time > 0 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern = 2
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern = 3
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
 
 
     elif lane == 2:
         if lane_2_green_time >= 3 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
-            light_pattern = 3
-            print(light_pattern)
+            
+            light_pattern_list.append(light_pattern)
         elif lane_2_green_time <= 3 and lane_2_green_time > 0 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern = 4
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern = 5
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
 
     elif lane == 3:
         if lane_3_green_time >= 3 and lane_3_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 5
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         elif lane_3_green_time <= 3 and lane_3_green_time > 0 and lane_3_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern = 6
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern = 7
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
 
     elif lane == 4:
         if lane_4_green_time >= 3 and lane_4_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 7
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         elif lane_4_green_time <= 3 and lane_4_green_time > 0 and lane_4_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern = 8
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
         else:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern = 1
-            print(light_pattern)
+            light_pattern_list.append(light_pattern)
+
 
 def draw_fps(img):
     global fps
@@ -341,7 +344,8 @@ def process_video(img):
     return class_values, total_units
 
 def show_output():
-    # start_bluetooth_connection()
+    global traffic_light_pattern
+    start_bluetooth_connection()
     while True:
         imgList = []
         for i, video_source in enumerate(video_sources):
@@ -364,6 +368,11 @@ def show_output():
             draw_traffic_light(imgList[i], i+1)
             # draw_fps(imgList[i])
 
+
+        initialize_traffic_light()
+        # print(traffic_light_pattern)
+        light_pattern_list.clear()
+
         traffic_lane_1_density = source_values[0]['source_percentage']
         traffic_lane_2_density = source_values[1]['source_percentage']
         traffic_lane_3_density = source_values[2]['source_percentage']
@@ -380,6 +389,12 @@ def show_output():
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+def initialize_traffic_light():
+    global traffic_light_pattern
+    # print('here')
+    traffic_light_pattern = int("".join(map(str, light_pattern_list)))
+    # print(traffic_light_pattern)
 
 # PERFORMANCE TESTING
 
@@ -415,21 +430,35 @@ def start_bluetooth_connection():
         exit()
 
 def change_light_pattern():
-    global light_pattern
+    global light_pattern, traffic_light_pattern
     
     ser = serial.Serial(port, baudrate, timeout=timeout)
 
     try:
         while True:
-            time.sleep(1)
-            ser.write(str(light_pattern).encode())
-            print(light_pattern)
+            time.sleep(2)
+            switch_dict = {
+                1571: 1,
+                2571: 2,
+                3371: 3,
+                3471: 4,
+                3551: 5,
+                3561: 6,
+                3577: 7,
+                3578: 8
+            }
+            arduino_light_pattern = switch_dict.get(traffic_light_pattern, -1)  # Default to -1 if not found
+
+            print(arduino_light_pattern)
+
+            ser.write(str(arduino_light_pattern).encode())
+            # light_pattern_list.append(light_pattern)
     except KeyboardInterrupt:
         print("\nInterrupted by user.")
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        ser.close()  # Close the serial connection
+        # ser.close()  # Close the serial connection
         print("Serial connection closed.")
 
 
@@ -464,7 +493,7 @@ def generate_report():
         
     # mydb.commit() # comment for testing purposes
 
-# threading.Thread(target=change_light_pattern).start()
+threading.Thread(target=change_light_pattern).start()
 # threading.Thread(target=get_fps).start()
 threading.Thread(target=show_output).start()
 threading.Thread(target=lane_timer, args=(1,)).start()
