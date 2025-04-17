@@ -184,8 +184,8 @@ def draw_traffic_light(img, lane):
     elif lane == 2:
         if lane_2_green_time > 3 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
-            
-            light_pattern_list.append(light_pattern)
+            # light_pattern = 3
+            # light_pattern_list.append(light_pattern)
         elif lane_2_green_time <= 3 and lane_2_green_time > 0 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             # light_pattern = 4
@@ -382,13 +382,13 @@ def show_output():
             draw_total_unit_text(imgList[i], source_values[i]['total_units'])
             draw_percentage_unit_text(imgList[i], source_values[i]['source_percentage'])
             draw_lane_timer(imgList[i], i+1)
-            # draw_traffic_light(imgList[i], i+1)
+            draw_traffic_light(imgList[i], i+1) #shows undelayed display output
             # draw_fps(imgList[i])
             set_traffic_light_patter(imgList[i], i+1)
 
 
         initialize_traffic_light()
-        # print(traffic_light_pattern)
+        print(traffic_light_pattern)
         light_pattern_list.clear()
 
         traffic_lane_1_density = source_values[0]['source_percentage']
@@ -483,60 +483,60 @@ def set_traffic_light_patter(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
     if lane == 1:
         if lane_1_green_time > 5 and lane_1_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)
             light_pattern_list.append(1)
         elif lane_1_green_time <= 5 and lane_1_green_time > 0 and lane_1_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(2)
         elif lane_1_red_time <= 2:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(3)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(3)
         
 
 
     elif lane == 2:
         if lane_2_green_time > 5 and lane_2_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern_list.append(3)
         elif lane_2_green_time <= 5 and lane_2_green_time > 0 and lane_2_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(4)
         elif lane_2_red_time <= 2:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(5)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(5)
 
     elif lane == 3:
         if lane_3_green_time > 5 and lane_3_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern_list.append(5)
         elif lane_3_green_time <= 5 and lane_3_green_time > 0 and lane_3_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(6)
         elif lane_3_red_time <= 2:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(7)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(7)
 
     elif lane == 4:
         if lane_4_green_time > 5 and lane_4_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern_list.append(7)
         elif lane_4_green_time <= 5 and lane_4_green_time > 0 and lane_4_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(8)
         elif lane_4_red_time <= 2:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(1)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
             light_pattern_list.append(1)
 
 # REPORT
@@ -569,7 +569,7 @@ def generate_report():
         
     # mydb.commit() # comment for testing purposes
 
-# threading.Thread(target=change_light_pattern).start()
+threading.Thread(target=change_light_pattern).start()
 # threading.Thread(target=get_fps).start()
 threading.Thread(target=show_output).start()
 threading.Thread(target=lane_timer, args=(1,)).start()
