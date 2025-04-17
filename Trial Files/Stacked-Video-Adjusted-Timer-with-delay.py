@@ -29,8 +29,8 @@ mydb = mysql.connector.connect(
 #     print(x)
 # sql.execute("USE traffic_density")
 
-port = 'COM3'  # Replace with your port if different
-baudrate = 9600  # Standard baud rate for HC-06
+port = 'COM4'  # Replace with your port if different
+baudrate = 115200  # Standard baud rate for HC-06
 timeout = 1
 ser = False
 
@@ -485,7 +485,7 @@ def set_traffic_light_patter(img, lane):
         if lane_1_green_time > 5 and lane_1_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)
             light_pattern_list.append(1)
-        elif lane_1_green_time <= 5 and lane_1_green_time > 0 and lane_1_red_time == 0:
+        elif lane_1_green_time <= 5 and lane_1_green_time > 2 and lane_1_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(2)
         elif lane_1_red_time <= 2:
@@ -501,7 +501,7 @@ def set_traffic_light_patter(img, lane):
         if lane_2_green_time > 5 and lane_2_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern_list.append(3)
-        elif lane_2_green_time <= 5 and lane_2_green_time > 0 and lane_2_red_time == 0:
+        elif lane_2_green_time <= 5 and lane_2_green_time > 2 and lane_2_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(4)
         elif lane_2_red_time <= 2:
@@ -515,7 +515,7 @@ def set_traffic_light_patter(img, lane):
         if lane_3_green_time > 5 and lane_3_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern_list.append(5)
-        elif lane_3_green_time <= 5 and lane_3_green_time > 0 and lane_3_red_time == 0:
+        elif lane_3_green_time <= 5 and lane_3_green_time > 2 and lane_3_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(6)
         elif lane_3_red_time <= 2:
@@ -529,7 +529,7 @@ def set_traffic_light_patter(img, lane):
         if lane_4_green_time > 5 and lane_4_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern_list.append(7)
-        elif lane_4_green_time <= 5 and lane_4_green_time > 0 and lane_4_red_time == 0:
+        elif lane_4_green_time <= 5 and lane_4_green_time > 2 and lane_4_red_time == 0:
             # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             light_pattern_list.append(8)
         elif lane_4_red_time <= 2:
