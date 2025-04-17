@@ -30,9 +30,9 @@ mydb = mysql.connector.connect(
 # sql.execute("USE traffic_density")
 
 port = 'COM4'  # Replace with your port if different
-baudrate = 115200  # Standard baud rate for HC-06
+baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
-ser = False
+
 
 light_pattern = 0
 light_pattern_list = []
@@ -96,22 +96,22 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
 ]
 
-# model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
-model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
+model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
+# model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # DISPLAY
@@ -171,7 +171,7 @@ def draw_traffic_light(img, lane):
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             # light_pattern = 1
             # light_pattern_list.append(light_pattern)
-        elif lane_1_green_time <= 3 and lane_1_green_time > 0 and lane_1_red_time == 0:
+        elif lane_1_green_time <= 3 and lane_1_green_time >= 0 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             # light_pattern = 2
             # light_pattern_list.append(light_pattern)
@@ -186,7 +186,7 @@ def draw_traffic_light(img, lane):
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             # light_pattern = 3
             # light_pattern_list.append(light_pattern)
-        elif lane_2_green_time <= 3 and lane_2_green_time > 0 and lane_2_red_time == 0:
+        elif lane_2_green_time <= 3 and lane_2_green_time >= 0 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             # light_pattern = 4
             # light_pattern_list.append(light_pattern)
@@ -200,7 +200,7 @@ def draw_traffic_light(img, lane):
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             # light_pattern = 5
             # light_pattern_list.append(light_pattern)
-        elif lane_3_green_time <= 3 and lane_3_green_time > 0 and lane_3_red_time == 0:
+        elif lane_3_green_time <= 3 and lane_3_green_time >= 0 and lane_3_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             # light_pattern = 6
             # light_pattern_list.append(light_pattern)
@@ -214,7 +214,7 @@ def draw_traffic_light(img, lane):
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             # light_pattern = 7
             # light_pattern_list.append(light_pattern)
-        elif lane_4_green_time <= 3 and lane_4_green_time > 0 and lane_4_red_time == 0:
+        elif lane_4_green_time <= 3 and lane_4_green_time >= 0 and lane_4_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
             # light_pattern = 8
             # light_pattern_list.append(light_pattern)
@@ -451,10 +451,12 @@ def start_bluetooth_connection():
         exit()
 
 def change_light_pattern():
-    global light_pattern, traffic_light_pattern, ser
+    global light_pattern, traffic_light_pattern
+    
     try:
+        ser = serial.Serial(port, baudrate, timeout=timeout)
         while True:
-            time.sleep(2)
+            time.sleep(1.2)
             switch_dict = {
                 1571: 1,
                 2571: 2,
@@ -481,63 +483,38 @@ def change_light_pattern():
 
 def set_traffic_light_patter(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
+
     if lane == 1:
         if lane_1_green_time > 5 and lane_1_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)
-            light_pattern_list.append(1)
-        elif lane_1_green_time <= 5 and lane_1_green_time > 2 and lane_1_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
-            light_pattern_list.append(2)
-        elif lane_1_red_time <= 2:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(3)
+            light_pattern_list.append(1)  # Green
+        elif lane_1_green_time <= 5 and lane_1_green_time >= 2 and lane_1_red_time == 0:
+            light_pattern_list.append(2)  # Yellow
         else:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(3)
-        
-
+            light_pattern_list.append(3)  # Red
 
     elif lane == 2:
         if lane_2_green_time > 5 and lane_2_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
-            light_pattern_list.append(3)
-        elif lane_2_green_time <= 5 and lane_2_green_time > 2 and lane_2_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
-            light_pattern_list.append(4)
-        elif lane_2_red_time <= 2:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(5)
+            light_pattern_list.append(3)  # Green
+        elif lane_2_green_time <= 5 and lane_2_green_time >= 2 and lane_2_red_time == 0:
+            light_pattern_list.append(4)  # Yellow
         else:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(5)
+            light_pattern_list.append(5)  # Red
 
     elif lane == 3:
         if lane_3_green_time > 5 and lane_3_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
-            light_pattern_list.append(5)
-        elif lane_3_green_time <= 5 and lane_3_green_time > 2 and lane_3_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
-            light_pattern_list.append(6)
-        elif lane_3_red_time <= 2:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(7)
+            light_pattern_list.append(5)  # Green
+        elif lane_3_green_time <= 5 and lane_3_green_time >= 2 and lane_3_red_time == 0:
+            light_pattern_list.append(6)  # Yellow
         else:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(7)
+            light_pattern_list.append(7)  # Red
 
     elif lane == 4:
         if lane_4_green_time > 5 and lane_4_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
-            light_pattern_list.append(7)
-        elif lane_4_green_time <= 5 and lane_4_green_time > 2 and lane_4_red_time == 0:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
-            light_pattern_list.append(8)
-        elif lane_4_red_time <= 2:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(1)
+            light_pattern_list.append(7)  # Green
+        elif lane_4_green_time <= 5 and lane_4_green_time >= 2 and lane_4_red_time == 0:
+            light_pattern_list.append(8)  # Yellow
         else:
-            # cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
-            light_pattern_list.append(1)
+            light_pattern_list.append(1)  # Red
 
 # REPORT
 def check_minute():
