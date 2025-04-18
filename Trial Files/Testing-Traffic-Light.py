@@ -90,22 +90,22 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
+    cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
+    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
 ]
 
-# model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
-model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
+model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
+# model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # DISPLAY
@@ -359,8 +359,9 @@ def process_video(img):
 def show_output(video_sources, unit_testing):
     global traffic_light_pattern
 
-    if (unit_testing == 0):
-        start_bluetooth_connection()
+    # if (unit_testing == 0):
+    #     print('here')
+    #     start_bluetooth_connection()
     
     while True:
         imgList = []
@@ -451,6 +452,8 @@ def start_bluetooth_connection():
 
 def change_light_pattern(unit_test):
     global light_pattern, traffic_light_pattern
+    start_bluetooth_connection()
+    
     while True:
         time.sleep(1.2)
         switch_dict = {
@@ -461,15 +464,23 @@ def change_light_pattern(unit_test):
             3551: 5,
             3561: 6,
             3577: 7,
-            3578: 8
+            3578: 8,
+            1234: 9,
+            0000: 10,
+            1111: 11,
+
         }
         if (unit_test != 0):
-            arduino_light_pattern = switch_dict.get(unit_test, -1)
+            while True:
+                pattern = input('Light Pattern: \t')
+                arduino_light_pattern = switch_dict.get(int(pattern), -1)
+                print(f"Traffic Light Pattern: \t{arduino_light_pattern}")
+                ser.write(str(arduino_light_pattern).encode())
 
         else:
             arduino_light_pattern = switch_dict.get(traffic_light_pattern, -1)  # Default to -1 if not found
 
-        print(arduino_light_pattern)
+        print(f"Traffic Light Pattern: \t{arduino_light_pattern}")
 
         ser.write(str(arduino_light_pattern).encode())
 
@@ -548,7 +559,7 @@ def generate_report(mydb, sql):
     sql.execute("""SELECT density FROM report ORDER BY id DESC LIMIT 4""")
     rows = sql.fetchall()
 
-
+    rows = rows[::-1] #reverse output
 
     for row in rows:
         print(row)
@@ -564,14 +575,14 @@ def unit_vehicle_classification_module():
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
+        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
+        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
+        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
+        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
+        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
+        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
+        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
+        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
         # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
         # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
         # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
@@ -636,7 +647,7 @@ def unit_traffic_light_module(lane_1_density, lane_2_density, lane_3_density, la
         print(f"Lane 4 Red Timer   - Expected: {expected_lane_4_red_timer}, Actual: {lane_4_red_timer}")
 
 def unit_traffic_light_control_module(pattern):
-    start_bluetooth_connection()
+    # start_bluetooth_connection()
     change_light_pattern(pattern)
 
 def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_density, lane_4_density):
@@ -649,12 +660,13 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
     generate_report(sql)
 
 
-# threading.Thread(target=change_light_pattern, args(0)).start()
-# threading.Thread(target=get_fps).start()
-# threading.Thread(target=show_output, args=(video_sources, 0)).start()
-# threading.Thread(target=lane_timer, args=(1,)).start()
-# threading.Thread(target=check_minute, args=()).start()
 
+# threading.Thread(target=get_fps).start()
+
+threading.Thread(target=show_output, args=(video_sources, 0,)).start()
+threading.Thread(target=change_light_pattern, args=(0,)).start()
+threading.Thread(target=lane_timer, args=(1,)).start()
+threading.Thread(target=check_minute).start()
 
 #light pattern guide
 # 1571: 1, Lane 1 - Green
@@ -665,10 +677,12 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
 # 3561: 6, Lane 3 - Yellow
 # 3577: 7, Lane 4 - Green
 # 3578: 8  Lane 4 - Yellow
-
+# 1234: 9, Series
+# 0000: 10, All Off
+# 1111: 11, All On
 
 # unit_traffic_density_calculation_module(1,2,3,4,17.51)
 # unit_traffic_light_module(1,2,3,4,5,6,7,8,9,10,11,12)
 # unit_vehicle_classification_module()
 # unit_traffic_light_control_module(1)
-unit_traffic_density_report_module(1,2,3,4)
+# unit_traffic_density_report_module(10,12,13,14)
