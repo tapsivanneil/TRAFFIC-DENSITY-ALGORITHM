@@ -556,7 +556,7 @@ def generate_report(mydb, sql):
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (minute, hour, day, date, month, year, i + 1, source_values[i]['source_percentage'])) 
 
-    sql.execute("""SELECT density FROM report ORDER BY id DESC LIMIT 4""")
+    sql.execute("""SELECT * FROM report ORDER BY id DESC LIMIT 4""")
     rows = sql.fetchall()
 
     rows = rows[::-1] #reverse output
@@ -565,6 +565,14 @@ def generate_report(mydb, sql):
         print(row)
 
     mydb.commit() # comment for testing purposes
+
+#Traffic Light System
+def start_program():
+    # threading.Thread(target=get_fps).start()
+    threading.Thread(target=show_output, args=(video_sources, 0,)).start()
+    threading.Thread(target=change_light_pattern, args=(0,)).start()
+    threading.Thread(target=lane_timer, args=(1,)).start()
+    threading.Thread(target=check_minute).start()
 
 
 # UNIT TESTING
@@ -659,15 +667,6 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
     check_minute()
     generate_report(sql)
 
-
-
-# threading.Thread(target=get_fps).start()
-
-threading.Thread(target=show_output, args=(video_sources, 0,)).start()
-threading.Thread(target=change_light_pattern, args=(0,)).start()
-threading.Thread(target=lane_timer, args=(1,)).start()
-threading.Thread(target=check_minute).start()
-
 #light pattern guide
 # 1571: 1, Lane 1 - Green
 # 2571: 2, Lane 1 - Yellow
@@ -681,8 +680,13 @@ threading.Thread(target=check_minute).start()
 # 0000: 10, All Off
 # 1111: 11, All On
 
-# unit_traffic_density_calculation_module(1,2,3,4,17.51)
-# unit_traffic_light_module(1,2,3,4,5,6,7,8,9,10,11,12)
+#start_program() #this is to start the whole program
+
+# UNIT TESTING 
+# unit_traffic_density_calculation_module(1,2,3,4,17.51)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
+# unit_traffic_light_module(1,2,3,4,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
 # unit_vehicle_classification_module()
-# unit_traffic_light_control_module(1)
-# unit_traffic_density_report_module(10,12,13,14)
+# unit_traffic_light_control_module(1) # 1 is for triggering the unit testing 
+# unit_traffic_density_report_module(10,12,13,14) # lane_1_density, lane_2_density, lane_3_density, lane_4_density
+
+
