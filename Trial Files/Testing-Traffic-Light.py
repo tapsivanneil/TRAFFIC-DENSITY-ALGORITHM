@@ -18,10 +18,6 @@ logging.getLogger('ultralytics').setLevel(logging.WARNING)
 # Initialize values
 mydb = False
 sql = False
-# sql.execute("SHOW DATABASES")
-# for x in sql:
-#     print(x)
-# sql.execute("USE traffic_density")
 
 port = 'COM4'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
@@ -33,7 +29,11 @@ light_pattern_list = []
 traffic_light_pattern = 0
 
 source_values = [{} for _ in range(4)]
-max_units = 900
+lane_1_roi = 600
+lane_2_roi = 600
+lane_3_roi = 300
+lane_4_roi = 900
+
 seconds = 0
 
 focused_lane = 1
@@ -104,8 +104,8 @@ video_sources = [
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
 ]
 
-model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
-# model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
+# model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
+model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/vehicle-detection-3.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # DISPLAY
@@ -322,7 +322,14 @@ def lane_timer(focused_lane):
     l   
 
 def calculate_traffic_density(source_values, i):
-    source_values[i]['source_percentage'] = (source_values[i]['total_units'] / max_units) * 100
+    if(i == 0):
+        source_values[i]['source_percentage'] = (source_values[i]['total_units'] / lane_1_roi) * 100
+    elif(i == 1):
+        source_values[i]['source_percentage'] = (source_values[i]['total_units'] / lane_2_roi) * 100
+    elif(i == 2):
+        source_values[i]['source_percentage'] = (source_values[i]['total_units'] / lane_3_roi) * 100
+    elif(i == 3):
+        source_values[i]['source_percentage'] = (source_values[i]['total_units'] / lane_4_roi) * 100
 #MODEL AND PROCESS
 
 def process_video(img):
@@ -359,10 +366,6 @@ def process_video(img):
 def show_output(video_sources, unit_testing):
     global traffic_light_pattern
 
-    # if (unit_testing == 0):
-    #     print('here')
-    #     start_bluetooth_connection()
-    
     while True:
         imgList = []
         for i, video_source in enumerate(video_sources):
@@ -388,7 +391,7 @@ def show_output(video_sources, unit_testing):
 
 
         initialize_traffic_light()
-        print(traffic_light_pattern)
+        # print(traffic_light_pattern)
         light_pattern_list.clear()
 
         traffic_lane_1_density = source_values[0]['source_percentage']
@@ -480,10 +483,9 @@ def change_light_pattern(unit_test):
         else:
             arduino_light_pattern = switch_dict.get(traffic_light_pattern, -1)  # Default to -1 if not found
 
-        print(f"Traffic Light Pattern: \t{arduino_light_pattern}")
+        # print(f"Traffic Light Pattern: \t{arduino_light_pattern}")
 
         ser.write(str(arduino_light_pattern).encode())
-
 
 def set_traffic_light_patter(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
@@ -583,14 +585,14 @@ def unit_vehicle_classification_module():
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
-        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
-        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
-        cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
+        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
+        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
+        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
+        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
+        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
+        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
+        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
+        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
         # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
         # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
         # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
@@ -614,34 +616,34 @@ def unit_traffic_light_module(lane_1_density, lane_2_density, lane_3_density, la
                               expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer,
                               expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer,):
 
-    lane_1_green_time = calculate_timer(1, lane_1_density)
-    lane_2_green_time = calculate_timer(2, lane_2_density)
-    lane_3_green_time = calculate_timer(3, lane_3_density)
-    lane_4_green_time = calculate_timer(4, lane_4_density)
+    lane_1_green_time = calculate_timer(1, lane_1_density) - yellow_timer 
+    lane_2_green_time = calculate_timer(2, lane_2_density) - yellow_timer
+    lane_3_green_time = calculate_timer(3, lane_3_density) - yellow_timer
+    lane_4_green_time = calculate_timer(4, lane_4_density) - yellow_timer
 
-    lane_1_red_timer = calculate_red_light_timer(1)
-    lane_2_red_timer = calculate_red_light_timer(2)
-    lane_3_red_timer = calculate_red_light_timer(3)
-    lane_4_red_timer = calculate_red_light_timer(4)
+    lane_1_red_time = 0
+    lane_2_red_time = lane_1_green_time + yellow_timer
+    lane_3_red_time = lane_1_green_time + lane_2_green_time + yellow_timer
+    lane_4_red_time = lane_1_green_time + lane_2_green_time + lane_3_green_time + yellow_timer
 
     if (lane_1_green_time == expected_lane_1_green_timer and 
         lane_2_green_time == expected_lane_2_green_timer and 
         lane_3_green_time == expected_lane_3_green_timer and 
         lane_4_green_time == expected_lane_4_green_timer and
-        lane_1_red_timer == expected_lane_1_red_timer and 
-        lane_2_red_timer == expected_lane_2_red_timer and 
-        lane_3_red_timer == expected_lane_3_red_timer and 
-        lane_4_red_timer == expected_lane_4_red_timer):
+        lane_1_red_time == expected_lane_1_red_timer and 
+        lane_2_red_time == expected_lane_2_red_timer and 
+        lane_3_red_time == expected_lane_3_red_timer and 
+        lane_4_red_time == expected_lane_4_red_timer):
 
         print("PASS:")
         print(f"Lane 1 Green Timer - Expected: {expected_lane_1_green_timer}, Actual: {lane_1_green_time}")
         print(f"Lane 2 Green Timer - Expected: {expected_lane_2_green_timer}, Actual: {lane_2_green_time}")
         print(f"Lane 3 Green Timer - Expected: {expected_lane_3_green_timer}, Actual: {lane_3_green_time}")
         print(f"Lane 4 Green Timer - Expected: {expected_lane_4_green_timer}, Actual: {lane_4_green_time}")
-        print(f"Lane 1 Red Timer   - Expected: {expected_lane_1_red_timer}, Actual: {lane_1_red_timer}")
-        print(f"Lane 2 Red Timer   - Expected: {expected_lane_2_red_timer}, Actual: {lane_2_red_timer}")
-        print(f"Lane 3 Red Timer   - Expected: {expected_lane_3_red_timer}, Actual: {lane_3_red_timer}")
-        print(f"Lane 4 Red Timer   - Expected: {expected_lane_4_red_timer}, Actual: {lane_4_red_timer}")
+        print(f"Lane 1 Red Timer   - Expected: {expected_lane_1_red_timer}, Actual: {lane_1_red_time}")
+        print(f"Lane 2 Red Timer   - Expected: {expected_lane_2_red_timer}, Actual: {lane_2_red_time}")
+        print(f"Lane 3 Red Timer   - Expected: {expected_lane_3_red_timer}, Actual: {lane_3_red_time}")
+        print(f"Lane 4 Red Timer   - Expected: {expected_lane_4_red_timer}, Actual: {lane_4_red_time}")
 
     else:
         print("FAIL:")
@@ -649,10 +651,10 @@ def unit_traffic_light_module(lane_1_density, lane_2_density, lane_3_density, la
         print(f"Lane 2 Green Timer - Expected: {expected_lane_2_green_timer}, Actual: {lane_2_green_time}")
         print(f"Lane 3 Green Timer - Expected: {expected_lane_3_green_timer}, Actual: {lane_3_green_time}")
         print(f"Lane 4 Green Timer - Expected: {expected_lane_4_green_timer}, Actual: {lane_4_green_time}")
-        print(f"Lane 1 Red Timer   - Expected: {expected_lane_1_red_timer}, Actual: {lane_1_red_timer}")
-        print(f"Lane 2 Red Timer   - Expected: {expected_lane_2_red_timer}, Actual: {lane_2_red_timer}")
-        print(f"Lane 3 Red Timer   - Expected: {expected_lane_3_red_timer}, Actual: {lane_3_red_timer}")
-        print(f"Lane 4 Red Timer   - Expected: {expected_lane_4_red_timer}, Actual: {lane_4_red_timer}")
+        print(f"Lane 1 Red Timer   - Expected: {expected_lane_1_red_timer}, Actual: {lane_1_red_time}")
+        print(f"Lane 2 Red Timer   - Expected: {expected_lane_2_red_timer}, Actual: {lane_2_red_time}")
+        print(f"Lane 3 Red Timer   - Expected: {expected_lane_3_red_timer}, Actual: {lane_3_red_time}")
+        print(f"Lane 4 Red Timer   - Expected: {expected_lane_4_red_timer}, Actual: {lane_4_red_time}")
 
 def unit_traffic_light_control_module(pattern):
     # start_bluetooth_connection()
@@ -680,11 +682,11 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
 # 0000: 10, All Off
 # 1111: 11, All On
 
-#start_program() #this is to start the whole program
+# start_program() #this is to start the whole program
 
 # UNIT TESTING 
-# unit_traffic_density_calculation_module(1,2,3,4,17.51)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
-# unit_traffic_light_module(1,2,3,4,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
+# unit_traffic_density_calculation_module(10,10,10,10,39.14)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
+unit_traffic_light_module(98,95,81,100,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
 # unit_vehicle_classification_module()
 # unit_traffic_light_control_module(1) # 1 is for triggering the unit testing 
 # unit_traffic_density_report_module(10,12,13,14) # lane_1_density, lane_2_density, lane_3_density, lane_4_density
