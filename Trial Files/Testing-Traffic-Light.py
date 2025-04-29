@@ -90,18 +90,10 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
-    # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/lane_1.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/lane_2.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/lane_3.mp4'),
-    cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/lane_4.mp4'),
-    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-    # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_1.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_2.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_3.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_4.mp4'),
 ]
 
 lane_mask = [
@@ -111,9 +103,7 @@ lane_mask = [
     cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
 ]
 
-
-# model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
-model = YOLO('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/weights/train_data_version_4_map_91_9_best.pt')
+model = YOLO('../weights/train_data_version_4_map_91_9_best.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # DISPLAY
@@ -340,10 +330,17 @@ def calculate_traffic_density(source_values, i):
         source_values[i]['source_percentage'] = (source_values[i]['total_units'] / lane_4_roi) * 100
 #MODEL AND PROCESS
 
-def process_video(img, lane_mask):
-
+def set_ROI(img, lane_mask):
     imgRegion = cv2.bitwise_and(img, lane_mask)
     results = model(imgRegion, stream=True)
+    return results
+
+def process_video(img, lane_mask, roi):
+    if roi:
+        results = set_ROI(img, lane_mask)
+    else:
+        results = model(img, stream=True)
+
     class_values = [0] * 4
     total_units = 0
 
@@ -373,9 +370,8 @@ def process_video(img, lane_mask):
 
     return class_values, total_units
 
-def show_output(video_sources, unit_testing):
+def show_output(video_sources, unit_testing, roi):
     global traffic_light_pattern
-
     while True:
         ROI_imgList = []
         imgList = []
@@ -384,12 +380,14 @@ def show_output(video_sources, unit_testing):
             if not success:
                 break
 
-            imgRegion = cv2.bitwise_and(img, lane_mask[i])
+            if roi: 
+                imgRegion = cv2.bitwise_and(img, lane_mask[i])
+                ROI_imgList.append(imgRegion)
 
-            class_values, total_units = process_video(img, lane_mask[i])
+            class_values, total_units = process_video(img, lane_mask[i], roi)
             source_values[i]['class_values'] = class_values
             source_values[i]['total_units'] = total_units
-            ROI_imgList.append(imgRegion)
+            
             imgList.append(img)
             
             calculate_traffic_density(source_values, i)
@@ -420,9 +418,14 @@ def show_output(video_sources, unit_testing):
 
 
         stackedImg = cvzone.stackImages(imgList, 2, 0.4)
-        ROI_stackedImg = cvzone.stackImages(ROI_imgList, 2, 0.4)
+        
+        if roi:
+            ROI_stackedImg = cvzone.stackImages(ROI_imgList, 2, 0.4)
+
         cv2.imshow("Traffic Light System", stackedImg)
-        # cv2.imshow("Bitwise - ROI ", ROI_stackedImg)
+
+        if roi:
+            cv2.imshow("Bitwise - ROI ", ROI_stackedImg)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -587,7 +590,7 @@ def generate_report(mydb, sql):
 #Traffic Light System
 def start_program():
     threading.Thread(target=get_fps).start()
-    threading.Thread(target=show_output, args=(video_sources, 0,)).start()
+    threading.Thread(target=show_output, args=(video_sources, 0, False)).start()
     # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
     # threading.Thread(target=check_minute).start()
