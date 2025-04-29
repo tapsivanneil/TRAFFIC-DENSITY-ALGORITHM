@@ -590,7 +590,7 @@ def generate_report(mydb, sql):
 #Traffic Light System
 def start_program():
     threading.Thread(target=get_fps).start()
-    threading.Thread(target=show_output, args=(video_sources, 0, False)).start()
+    threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
     # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
     # threading.Thread(target=check_minute).start()
@@ -604,21 +604,20 @@ def unit_vehicle_classification_module():
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
         # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-1.mp4'),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-2.mp4'),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-3.mp4'),
-        # cv2.VideoCapture('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/Trial Files/video-source/video-source-4.mp4')
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-1.mp4'),
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
-        cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-        # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
+        cv2.VideoCapture('Trial Files/video-source/lane_1.mp4'),
+        cv2.VideoCapture('Trial Files/video-source/lane_2.mp4'),
+        cv2.VideoCapture('Trial Files/video-source/lane_3.mp4'),
+        cv2.VideoCapture('Trial Files/video-source/lane_4.mp4'),
     ]
 
-    show_output(unit_video, 1)
+    lane_mask = [
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
+    ]
+
+    show_output(unit_video, 1, True)
 
 def unit_traffic_density_calculation_module(class_1_count, class_2_count, class_3_count, class_4_count, expected_result):
     
