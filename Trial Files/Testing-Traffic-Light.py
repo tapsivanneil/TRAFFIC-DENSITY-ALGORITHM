@@ -23,6 +23,7 @@ port = 'COM4'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
+confidence = 0.5
 
 light_pattern = 0
 light_pattern_list = []
@@ -80,8 +81,20 @@ lowest_fps = 0
 inference = 0
 
 # Define the position for the text
-x, y = 10, 30
-spacing = 240  # Space between lines
+x = 1        # 1 * spacing = final x position
+y = 50       # start from 50px from top
+spacing = 100  # each x "step" moves 100 pixels
+
+text_scale = 1.5
+text_thickness = 2
+text_R = 0
+text_G = 0
+text_B = 0
+
+detect_R = 123
+detect_G = 17
+detect_B = 19
+fullscreen_size = (1920, 1080)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -111,18 +124,17 @@ class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 def draw_class_texts(img, values):
     for i, (class_name, value) in enumerate(zip(class_names, values)):
         text = f"{class_name}: {value}"
-        cvzone.putTextRect(img, text, (x+ i * spacing, y ), scale=2, thickness=3, colorR=(0, 0, 0))
+        cvzone.putTextRect(img, text, (x+ i * 240, y ), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_total_unit_text(img, total_units):
     total_units_text = f"Total Units: {total_units}"
-    cvzone.putTextRect(img, total_units_text, (x+ 4 * spacing, y ), scale=2, thickness=3, colorR=(0, 0, 0))
+    cvzone.putTextRect(img, total_units_text, (x * spacing, y + 425), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_percentage_unit_text(img, percentage):
     traffic_density_text = f"Traffic Density: {percentage:.2f} %"
-    cvzone.putTextRect(img, traffic_density_text, (x+ 6 * spacing, y ), scale=2, thickness=3, colorR=(0, 0, 0))
+    cvzone.putTextRect(img, traffic_density_text, (x * spacing, y + 375), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_lane_timer(img, lane):
-    
     traffic_timer = ""
 
     if lane == 1:
@@ -149,12 +161,12 @@ def draw_lane_timer(img, lane):
         else:
             traffic_timer = f"YELLOW {lane_4_green_time} RED: {lane_4_red_time}"
 
-    
-    cvzone.putTextRect(img, traffic_timer, (x + 2 * 200, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
+    cvzone.putTextRect(img, traffic_timer, (x + 3 * spacing, y + 125), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_lane_density(img, percentage):
     traffic_density_text = f"Traffic Lane Density: {percentage:.2f} %"
-    cvzone.putTextRect(img, traffic_density_text, (x+ 5 * spacing, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
+    cvzone.putTextRect(img, traffic_density_text, (x * spacing, y + 325), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
+
 
 def draw_traffic_light(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
@@ -218,6 +230,10 @@ def draw_traffic_light(img, lane):
 def draw_fps(img):
     global fps
     cvzone.putTextRect(img, str(fps), (x + 2 * 200, y + 525), scale=2, thickness=3, colorR=(255, 0, 0))
+
+def draw_detection(img, box, cls, conf):
+    x1, y1, x2, y2 = map(int, box.xyxy[0])
+    cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
 
 #CALCULATION
 
@@ -339,7 +355,7 @@ def process_video(img, lane_mask, roi):
     if roi:
         results = set_ROI(img, lane_mask)
     else:
-        results = model(img, stream=True)
+        results = model(img, stream=True, conf= confidence)
 
     class_values = [0] * 4
     total_units = 0
@@ -366,7 +382,7 @@ def process_video(img, lane_mask, roi):
                 class_values[cls] += 1
                 total_units+= area_class_4
 
-            cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=2, thickness=3, colorR=(123, 17, 19))
+            draw_detection(img, box, cls, conf)
 
     return class_values, total_units
 
@@ -418,14 +434,16 @@ def show_output(video_sources, unit_testing, roi):
 
 
         stackedImg = cvzone.stackImages(imgList, 2, 0.4)
-        
+        resized_stackedImg = cv2.resize(stackedImg, fullscreen_size)
+
+        cv2.namedWindow("Traffic Light System", cv2.WINDOW_NORMAL)
+        cv2.imshow("Traffic Light System", resized_stackedImg)
+
         if roi:
             ROI_stackedImg = cvzone.stackImages(ROI_imgList, 2, 0.4)
-
-        cv2.imshow("Traffic Light System", stackedImg)
-
-        if roi:
-            cv2.imshow("Bitwise - ROI ", ROI_stackedImg)
+            resized_ROI_stackedImg = cv2.resize(ROI_stackedImg, fullscreen_size)
+            cv2.namedWindow("Bitwise - ROI", cv2.WINDOW_NORMAL)
+            cv2.imshow("Bitwise - ROI", resized_ROI_stackedImg)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -589,7 +607,7 @@ def generate_report(mydb, sql):
 
 #Traffic Light System
 def start_program():
-    threading.Thread(target=get_fps).start()
+    # threading.Thread(target=get_fps).start()
     threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
     # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
