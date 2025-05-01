@@ -23,17 +23,17 @@ port = 'COM4'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
-confidence = 0.8
+confidence = 0.6
 
 light_pattern = 0
 light_pattern_list = []
 traffic_light_pattern = 0
 
 source_values = [{} for _ in range(4)]
-lane_1_roi = 300
-lane_2_roi = 300
-lane_3_roi = 300
-lane_4_roi = 150
+lane_1_roi = 600
+lane_2_roi = 600
+lane_3_roi = 900
+lane_4_roi = 300
 
 seconds = 0
 
@@ -57,7 +57,7 @@ lane_2_red_time = lane_1_green_time
 lane_3_red_time = lane_1_green_time + lane_2_green_time 
 lane_4_red_time = lane_1_green_time + lane_2_green_time + lane_3_green_time
 
-light_pos = (100, 100, 50, 50)  # (x, y, width, height)
+
 colors = [(0, 0, 255), (0, 255, 255), (0, 255, 0)]  # Red, Yellow, Green
 traffic_light_width = 50
 traffic_light_height = 50
@@ -74,9 +74,9 @@ lowest_fps = 0
 inference = 0
 
 # Define the position for the text
-x = 1        # 1 * spacing = final x position
-y = 50       # start from 50px from top
-spacing = 100  # each x "step" moves 100 pixels
+x = 1    
+y = 50       
+spacing = 100 
 
 text_scale = 1.5
 text_thickness = 2
@@ -121,8 +121,7 @@ class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 def draw_class_texts(img, values):
     for i, (class_name, value) in enumerate(zip(class_names, values)):
-        text = f"{class_name}"
-        # text = f"{class_name}: {value}" #with confidence value
+        text = f"{class_name}: {value}"
         cvzone.putTextRect(img, text, (x+ i * 240, y ), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_total_unit_text(img, total_units):
@@ -264,7 +263,8 @@ def draw_fps(img):
 
 def draw_detection(img, box, cls, conf):
     x1, y1, x2, y2 = map(int, box.xyxy[0])
-    cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
+    cvzone.putTextRect(img, f'{class_names[cls]}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
+    # cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
 
 #CALCULATION
 
@@ -454,12 +454,7 @@ def show_output(video_sources, unit_testing, roi):
         # print(traffic_light_pattern)
         light_pattern_list.clear()
 
-        traffic_lane_1_density = source_values[0]['source_percentage']
-        traffic_lane_2_density = source_values[1]['source_percentage']
-        traffic_lane_3_density = source_values[2]['source_percentage']
-        traffic_lane_4_density = source_values[3]['source_percentage']
-
-        traffic_lane_density = [traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density]
+        traffic_lane_density = [source_values[0]['source_percentage'], source_values[1]['source_percentage'], source_values[2]['source_percentage'], source_values[3]['source_percentage']]
 
         for i in range(4):
             draw_lane_density(imgList[i], i+1, source_values[i]['source_percentage'])
@@ -639,11 +634,10 @@ def generate_report(mydb, sql):
 #Traffic Light System
 def start_program():
     # threading.Thread(target=get_fps).start()
-    threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
+    threading.Thread(target=show_output, args=(video_sources, 0, False)).start()
     # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
-    # threading.Thread(target=check_minute).start()
-
+    threading.Thread(target=check_minute).start()
 
 # UNIT TESTING
 
@@ -683,10 +677,10 @@ def unit_traffic_light_module(lane_1_density, lane_2_density, lane_3_density, la
                               expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer,
                               expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer,):
 
-    lane_1_green_time = calculate_timer(1, lane_1_density) - yellow_timer 
-    lane_2_green_time = calculate_timer(2, lane_2_density) - yellow_timer
-    lane_3_green_time = calculate_timer(3, lane_3_density) - yellow_timer
-    lane_4_green_time = calculate_timer(4, lane_4_density) - yellow_timer
+    lane_1_green_time = calculate_timer(1, lane_1_density) 
+    lane_2_green_time = calculate_timer(2, lane_2_density)
+    lane_3_green_time = calculate_timer(3, lane_3_density)
+    lane_4_green_time = calculate_timer(4, lane_4_density)
 
     lane_1_red_time = 0
     lane_2_red_time = lane_1_green_time + yellow_timer
@@ -752,8 +746,8 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
 start_program() #this is to start the whole program
 
 # UNIT TESTING 
-# unit_traffic_density_calculation_module(10,10,10,10,39.14)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
-# unit_traffic_light_module(98,95,81,100,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
+# unit_traffic_density_calculation_module(1,3,0,0,39.14)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
+# unit_traffic_light_module(28,15,35,10,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
 # unit_vehicle_classification_module()
 # unit_traffic_light_control_module(1) # 1 is for triggering the unit testing 
 # unit_traffic_density_report_module(10,12,13,14) # lane_1_density, lane_2_density, lane_3_density, lane_4_density
