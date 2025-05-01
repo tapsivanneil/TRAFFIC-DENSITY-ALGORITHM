@@ -23,17 +23,17 @@ port = 'COM4'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
-confidence = 0.5
+confidence = 0.8
 
 light_pattern = 0
 light_pattern_list = []
 traffic_light_pattern = 0
 
 source_values = [{} for _ in range(4)]
-lane_1_roi = 600
-lane_2_roi = 600
+lane_1_roi = 300
+lane_2_roi = 300
 lane_3_roi = 300
-lane_4_roi = 900
+lane_4_roi = 150
 
 seconds = 0
 
@@ -56,13 +56,6 @@ lane_1_red_time = 0
 lane_2_red_time = lane_1_green_time
 lane_3_red_time = lane_1_green_time + lane_2_green_time 
 lane_4_red_time = lane_1_green_time + lane_2_green_time + lane_3_green_time
-
-traffic_lane_1_density = 0
-traffic_lane_2_density = 0
-traffic_lane_3_density = 0
-traffic_lane_4_density = 0
-
-traffic_lane_density=[]
 
 light_pos = (100, 100, 50, 50)  # (x, y, width, height)
 colors = [(0, 0, 255), (0, 255, 255), (0, 255, 0)]  # Red, Yellow, Green
@@ -96,6 +89,8 @@ detect_G = 17
 detect_B = 19
 fullscreen_size = (1920, 1080)
 
+traffic_lane_density = []
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 video_sources = [
@@ -108,6 +103,9 @@ video_sources = [
     cv2.VideoCapture('Trial Files/video-source/lane_3.mp4'),
     cv2.VideoCapture('Trial Files/video-source/lane_4.mp4'),
 ]
+
+# video_sources[0].set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+# video_sources[0].set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 lane_mask = [
     cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK.png'),
@@ -123,107 +121,140 @@ class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 def draw_class_texts(img, values):
     for i, (class_name, value) in enumerate(zip(class_names, values)):
-        text = f"{class_name}: {value}"
+        text = f"{class_name}"
+        # text = f"{class_name}: {value}" #with confidence value
         cvzone.putTextRect(img, text, (x+ i * 240, y ), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_total_unit_text(img, total_units):
     total_units_text = f"Total Units: {total_units}"
     cvzone.putTextRect(img, total_units_text, (x * spacing, y + 425), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
-def draw_percentage_unit_text(img, percentage):
-    traffic_density_text = f"Traffic Density: {percentage:.2f} %"
-    cvzone.putTextRect(img, traffic_density_text, (x * spacing, y + 375), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
+def draw_lane_timer_one_line(img, lane):
+    traffic_timer = ""
+
+    if lane == 1:
+        if lane_1_green_time > 3:
+            traffic_timer = f"G {lane_1_green_time - yellow_timer} R: {lane_1_red_time}"
+        else:
+            traffic_timer = f"Y {lane_1_green_time} R: {lane_1_red_time}"
+
+    elif lane == 2:
+        if lane_2_green_time > 3:
+            traffic_timer = f"G {lane_2_green_time - yellow_timer} R: {lane_2_red_time}"
+        else:
+            traffic_timer = f"Y {lane_2_green_time} R: {lane_2_red_time}"
+
+    elif lane == 3:
+        if lane_3_green_time > 3:
+            traffic_timer = f"G {lane_3_green_time - yellow_timer} R: {lane_3_red_time}"
+        else:
+            traffic_timer = f"Y {lane_3_green_time} R: {lane_3_red_time}"
+
+    elif lane == 4:
+        if lane_4_green_time > 3:
+            traffic_timer = f"G {lane_4_green_time - yellow_timer} R: {lane_4_red_time}"
+        else:
+            traffic_timer = f"Y {lane_4_green_time} R: {lane_4_red_time}"
+
+    cvzone.putTextRect(img, traffic_timer, (x + 10 * spacing, y + 200), scale=3, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_lane_timer(img, lane):
     traffic_timer = ""
 
     if lane == 1:
-        if lane_1_green_time > 3:
-            traffic_timer = f"GREEN {lane_1_green_time - yellow_timer} RED: {lane_1_red_time}"
+        if lane_1_green_time > 3 and lane_1_red_time == 0:
+            traffic_timer = f"{lane_1_green_time - yellow_timer}"
+        elif lane_1_green_time < 3 and lane_1_green_time > 0:
+            traffic_timer = f"{lane_1_green_time}"
         else:
-            traffic_timer = f"YELLOW {lane_1_green_time} RED: {lane_1_red_time}"
+            traffic_timer = f"{lane_1_red_time}"
 
-    elif lane == 2:
-        if lane_2_green_time > 3:
-            traffic_timer = f"GREEN {lane_2_green_time - yellow_timer} RED: {lane_2_red_time}"
+    if lane == 2:
+        if lane_2_green_time > 3 and lane_2_red_time == 0:
+            traffic_timer = f"{lane_2_green_time - yellow_timer}"
+        elif lane_2_green_time < 3 and lane_2_green_time > 0:
+            traffic_timer = f"{lane_2_green_time}"
         else:
-            traffic_timer = f"YELLOW {lane_2_green_time} RED: {lane_2_red_time}"
+            traffic_timer = f"{lane_2_red_time}"
 
     elif lane == 3:
-        if lane_3_green_time > 3:
-            traffic_timer = f"GREEN {lane_3_green_time - yellow_timer} RED: {lane_3_red_time}"
+        if lane_3_green_time > 3 and lane_3_red_time == 0:
+            traffic_timer = f"{lane_3_green_time - yellow_timer}"
+        elif lane_3_green_time < 3 and lane_3_green_time > 0:
+            traffic_timer = f"{lane_3_green_time}"
         else:
-            traffic_timer = f"YELLOW {lane_3_green_time} RED: {lane_3_red_time}"
+            traffic_timer = f"{lane_3_red_time}"
 
     elif lane == 4:
-        if lane_4_green_time > 3:
-            traffic_timer = f"GREEN {lane_4_green_time - yellow_timer} RED: {lane_4_red_time}"
+        if lane_4_green_time > 3 and lane_4_red_time == 0:
+            traffic_timer = f"{lane_4_green_time - yellow_timer}"
+        elif lane_4_green_time < 3 and lane_4_green_time > 0:
+            traffic_timer = f"{lane_4_green_time}"
         else:
-            traffic_timer = f"YELLOW {lane_4_green_time} RED: {lane_4_red_time}"
+            traffic_timer = f"{lane_4_red_time}"
 
-    cvzone.putTextRect(img, traffic_timer, (x + 3 * spacing, y + 125), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
+    cvzone.putTextRect(img, str(traffic_timer), (x + 11 * spacing, y + 300), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
 
-def draw_lane_density(img, percentage):
-    traffic_density_text = f"Traffic Lane Density: {percentage:.2f} %"
-    cvzone.putTextRect(img, traffic_density_text, (x * spacing, y + 325), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
-
+def draw_lane_density(img, i, percentage):
+    traffic_density_text = f"Traffic Lane {i} Density: {percentage:.2f} %"
+    cvzone.putTextRect(img, traffic_density_text, (x * 800, y + 625), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_traffic_light(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
     if lane == 1:
         if lane_1_green_time > 3 and lane_1_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)
             # light_pattern = 1
             # light_pattern_list.append(light_pattern)
-        elif lane_1_green_time <= 3 and lane_1_green_time >= 0 and lane_1_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+        elif lane_1_green_time <= 3 and lane_1_green_time > 0 and lane_1_red_time == 0:
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
             # light_pattern = 2
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
             # light_pattern = 3
             # light_pattern_list.append(light_pattern)
 
 
     elif lane == 2:
         if lane_2_green_time > 3 and lane_2_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)# RYG
             # light_pattern = 3
             # light_pattern_list.append(light_pattern)
-        elif lane_2_green_time <= 3 and lane_2_green_time >= 0 and lane_2_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+        elif lane_2_green_time <= 3 and lane_2_green_time > 0 and lane_2_red_time == 0:
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
             # light_pattern = 4
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
             # light_pattern = 5
             # light_pattern_list.append(light_pattern)
 
     elif lane == 3:
         if lane_3_green_time > 3 and lane_3_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)# RYG
             # light_pattern = 5
             # light_pattern_list.append(light_pattern)
-        elif lane_3_green_time <= 3 and lane_3_green_time >= 0 and lane_3_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+        elif lane_3_green_time <= 3 and lane_3_green_time > 0 and lane_3_red_time == 0:
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
             # light_pattern = 6
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
             # light_pattern = 7
             # light_pattern_list.append(light_pattern)
 
     elif lane == 4:
         if lane_4_green_time > 3 and lane_4_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)# RYG
             # light_pattern = 7
             # light_pattern_list.append(light_pattern)
-        elif lane_4_green_time <= 3 and lane_4_green_time >= 0 and lane_4_red_time == 0:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[1], thickness= -1)
+        elif lane_4_green_time <= 3 and lane_4_green_time > 0 and lane_4_red_time == 0:
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
             # light_pattern = 8
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[0], thickness= -1)
+            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
             # light_pattern = 1
             # light_pattern_list.append(light_pattern)
 
@@ -240,32 +271,32 @@ def draw_detection(img, box, cls, conf):
 def calculate_timer(lane, density):
     if lane == 1:
         if density <= 33.333:
-            return 21 + yellow_timer
+            return 21
         elif density <= 66.666:
-            return 42 + yellow_timer
+            return 42
         else:
-            return 65 + yellow_timer
+            return 65
     elif lane == 2:
         if density <= 33.333:
-            return 35 + yellow_timer
+            return 35
         elif density <= 66.666:
-            return 70 + yellow_timer
+            return 70
         else:
-            return 105 + yellow_timer
+            return 105
     elif lane == 3:
         if density <= 33.333:
             return 11
         elif density <= 66.666:
-            return 22 + yellow_timer
+            return 22
         else:
-            return 35 + yellow_timer
+            return 35
     elif lane == 4:
         if density <= 33.333:
-            return 13 + yellow_timer
+            return 13
         elif density <= 66.666:
-            return 26 + yellow_timer
+            return 26
         else:
-            return 40 + yellow_timer
+            return 40
     else:
         return 0
 
@@ -296,7 +327,7 @@ def lane_timer(focused_lane):
                 lane_4_red_time -= 1
             else:
                 focused_lane = 2
-                lane_1_green_time = calculate_timer(1, traffic_lane_1_density) + yellow_timer
+                lane_1_green_time = calculate_timer(1, traffic_lane_density[0]) + yellow_timer
                 lane_1_red_time = calculate_red_light_timer(1)
 
         elif focused_lane == 2:
@@ -307,7 +338,7 @@ def lane_timer(focused_lane):
                 lane_4_red_time -= 1
             else:
                 focused_lane = 3
-                lane_2_green_time = calculate_timer(2,traffic_lane_2_density) + yellow_timer
+                lane_2_green_time = calculate_timer(2,traffic_lane_density[1]) + yellow_timer
                 lane_2_red_time = calculate_red_light_timer(2)
 
         elif focused_lane == 3:
@@ -318,7 +349,7 @@ def lane_timer(focused_lane):
                 lane_4_red_time -= 1
             else:
                 focused_lane = 4
-                lane_3_green_time = calculate_timer(3, traffic_lane_3_density) + yellow_timer
+                lane_3_green_time = calculate_timer(3, traffic_lane_density[2]) + yellow_timer
                 lane_3_red_time = calculate_red_light_timer(3)
 
         elif focused_lane == 4:
@@ -329,7 +360,7 @@ def lane_timer(focused_lane):
                 lane_3_red_time -= 1
             else:
                 focused_lane = 1
-                lane_4_green_time = calculate_timer(4, traffic_lane_4_density) + yellow_timer
+                lane_4_green_time = calculate_timer(4, traffic_lane_density[3]) + yellow_timer
                 lane_4_red_time = calculate_red_light_timer(4)
 
         # print(f"{output}")
@@ -388,6 +419,7 @@ def process_video(img, lane_mask, roi):
 
 def show_output(video_sources, unit_testing, roi):
     global traffic_light_pattern
+    global traffic_lane_density
     while True:
         ROI_imgList = []
         imgList = []
@@ -410,8 +442,8 @@ def show_output(video_sources, unit_testing, roi):
             set_fps()
             
             draw_class_texts(imgList[i], source_values[i]['class_values'])
-            draw_total_unit_text(imgList[i], source_values[i]['total_units'])
-            draw_percentage_unit_text(imgList[i], source_values[i]['source_percentage'])
+            # draw_total_unit_text(imgList[i], source_values[i]['total_units'])
+            # draw_percentage_unit_text(imgList[i], source_values[i]['source_percentage'])
             draw_lane_timer(imgList[i], i+1)
             draw_traffic_light(imgList[i], i+1) #shows undelayed display output
             # draw_fps(imgList[i])
@@ -430,8 +462,7 @@ def show_output(video_sources, unit_testing, roi):
         traffic_lane_density = [traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density]
 
         for i in range(4):
-            draw_lane_density(imgList[i], traffic_lane_density[i])
-
+            draw_lane_density(imgList[i], i+1, source_values[i]['source_percentage'])
 
         stackedImg = cvzone.stackImages(imgList, 2, 0.4)
         resized_stackedImg = cv2.resize(stackedImg, fullscreen_size)
