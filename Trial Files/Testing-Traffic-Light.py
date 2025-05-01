@@ -19,7 +19,7 @@ logging.getLogger('ultralytics').setLevel(logging.WARNING)
 mydb = False
 sql = False
 
-port = 'COM4'  # Replace with your port if different
+port = 'COM3'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
@@ -114,7 +114,7 @@ lane_mask = [
     cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
 ]
 
-model = YOLO('../weights/train_data_version_4_map_91_9_best.pt')
+model = YOLO('../weights/train_data_version_5_map_94_best.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
 
 # DISPLAY
@@ -554,33 +554,33 @@ def set_traffic_light_patter(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
 
     if lane == 1:
-        if lane_1_green_time > 5 and lane_1_red_time == 0:
+        if lane_1_green_time > 5 and lane_1_red_time <= 2:
             light_pattern_list.append(1)  # Green
-        elif lane_1_green_time <= 5 and lane_1_green_time >= 2 and lane_1_red_time == 0:
+        elif lane_1_green_time <= 5 and lane_1_green_time > 3:
             light_pattern_list.append(2)  # Yellow
         else:
             light_pattern_list.append(3)  # Red
 
     elif lane == 2:
-        if lane_2_green_time > 5 and lane_2_red_time == 0:
+        if lane_2_green_time > 5 and lane_2_red_time <= 2:
             light_pattern_list.append(3)  # Green
-        elif lane_2_green_time <= 5 and lane_2_green_time >= 2 and lane_2_red_time == 0:
+        elif lane_2_green_time <= 5 and lane_2_green_time > 3:
             light_pattern_list.append(4)  # Yellow
         else:
             light_pattern_list.append(5)  # Red
 
     elif lane == 3:
-        if lane_3_green_time > 5 and lane_3_red_time == 0:
+        if lane_3_green_time > 5 and lane_3_red_time <= 2:
             light_pattern_list.append(5)  # Green
-        elif lane_3_green_time <= 5 and lane_3_green_time >= 2 and lane_3_red_time == 0:
+        elif lane_3_green_time <= 5 and lane_3_green_time > 3:
             light_pattern_list.append(6)  # Yellow
         else:
             light_pattern_list.append(7)  # Red
 
     elif lane == 4:
-        if lane_4_green_time > 5 and lane_4_red_time == 0:
+        if lane_4_green_time > 5 and lane_4_red_time <= 2:
             light_pattern_list.append(7)  # Green
-        elif lane_4_green_time <= 5 and lane_4_green_time >= 2 and lane_4_red_time == 0:
+        elif lane_4_green_time <= 5 and lane_4_green_time > 3:
             light_pattern_list.append(8)  # Yellow
         else:
             light_pattern_list.append(1)  # Red
@@ -633,11 +633,11 @@ def generate_report(mydb, sql):
 
 #Traffic Light System
 def start_program():
-    # threading.Thread(target=get_fps).start()
+    threading.Thread(target=get_fps).start()
     threading.Thread(target=show_output, args=(video_sources, 0, False)).start()
-    # threading.Thread(target=change_light_pattern, args=(0,)).start()
+    threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
-    threading.Thread(target=check_minute).start()
+    # threading.Thread(target=check_minute).start()
 
 # UNIT TESTING
 
