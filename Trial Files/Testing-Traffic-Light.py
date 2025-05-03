@@ -23,7 +23,7 @@ port = 'COM3'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
-confidence = 0.6
+confidence = 0.5
 
 light_pattern = 0
 light_pattern_list = []
@@ -94,24 +94,24 @@ traffic_lane_density = []
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 video_sources = [
+    # cv2.VideoCapture(1, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    cv2.VideoCapture('Trial Files/video-source/lane_1.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/lane_2.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/lane_3.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/lane_4.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
 ]
 
-# video_sources[0].set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-# video_sources[0].set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+video_sources[0].set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+video_sources[0].set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 lane_mask = [
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK.png'),
     cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
 ]
 
 model = YOLO('../weights/train_data_version_5_map_94_best.pt')
@@ -263,8 +263,8 @@ def draw_fps(img):
 
 def draw_detection(img, box, cls, conf):
     x1, y1, x2, y2 = map(int, box.xyxy[0])
-    cvzone.putTextRect(img, f'{class_names[cls]}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
-    # cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
+    # cvzone.putTextRect(img, f'{class_names[cls]}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
+    cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
 
 #CALCULATION
 
@@ -379,7 +379,7 @@ def calculate_traffic_density(source_values, i):
 
 def set_ROI(img, lane_mask):
     imgRegion = cv2.bitwise_and(img, lane_mask)
-    results = model(imgRegion, stream=True)
+    results = model(imgRegion, stream=True, conf=confidence)
     return results
 
 def process_video(img, lane_mask, roi):
@@ -554,7 +554,7 @@ def set_traffic_light_patter(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
 
     if lane == 1:
-        if lane_1_green_time > 5 and lane_1_red_time <= 2:
+        if lane_1_green_time > 5 and lane_1_red_time <= 1:
             light_pattern_list.append(1)  # Green
         elif lane_1_green_time <= 5 and lane_1_green_time > 3:
             light_pattern_list.append(2)  # Yellow
@@ -562,7 +562,7 @@ def set_traffic_light_patter(img, lane):
             light_pattern_list.append(3)  # Red
 
     elif lane == 2:
-        if lane_2_green_time > 5 and lane_2_red_time <= 2:
+        if lane_2_green_time > 5 and lane_2_red_time <= 1:
             light_pattern_list.append(3)  # Green
         elif lane_2_green_time <= 5 and lane_2_green_time > 3:
             light_pattern_list.append(4)  # Yellow
@@ -570,7 +570,7 @@ def set_traffic_light_patter(img, lane):
             light_pattern_list.append(5)  # Red
 
     elif lane == 3:
-        if lane_3_green_time > 5 and lane_3_red_time <= 2:
+        if lane_3_green_time > 5 and lane_3_red_time <= 1:
             light_pattern_list.append(5)  # Green
         elif lane_3_green_time <= 5 and lane_3_green_time > 3:
             light_pattern_list.append(6)  # Yellow
@@ -578,7 +578,7 @@ def set_traffic_light_patter(img, lane):
             light_pattern_list.append(7)  # Red
 
     elif lane == 4:
-        if lane_4_green_time > 5 and lane_4_red_time <= 2:
+        if lane_4_green_time > 5 and lane_4_red_time <= 1:
             light_pattern_list.append(7)  # Green
         elif lane_4_green_time <= 5 and lane_4_green_time > 3:
             light_pattern_list.append(8)  # Yellow
@@ -634,7 +634,7 @@ def generate_report(mydb, sql):
 #Traffic Light System
 def start_program():
     threading.Thread(target=get_fps).start()
-    threading.Thread(target=show_output, args=(video_sources, 0, False)).start()
+    threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
     threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
     # threading.Thread(target=check_minute).start()
