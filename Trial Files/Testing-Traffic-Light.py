@@ -98,20 +98,20 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/moderate-traffic.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_1.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_2.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_3.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/lane_4.mp4'),
 ]
 
 video_sources[0].set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 video_sources[0].set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 lane_mask = [
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK.png'),
     cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
 ]
 
 model = YOLO('../weights/train_data_version_5_map_94_best.pt')
@@ -263,8 +263,8 @@ def draw_fps(img):
 
 def draw_detection(img, box, cls, conf):
     x1, y1, x2, y2 = map(int, box.xyxy[0])
-    # cvzone.putTextRect(img, f'{class_names[cls]}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
-    cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
+    cvzone.putTextRect(img, f'{class_names[cls]}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
+    # cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
 
 #CALCULATION
 
