@@ -30,10 +30,10 @@ light_pattern_list = []
 traffic_light_pattern = 0
 
 source_values = [{} for _ in range(4)]
-lane_1_roi = 600
-lane_2_roi = 600
-lane_3_roi = 900
-lane_4_roi = 300
+lane_1_roi = 225
+lane_2_roi = 150
+lane_3_roi = 150
+lane_4_roi = 150
 
 seconds = 0
 
@@ -45,10 +45,15 @@ area_class_2 = 6.6
 area_class_3 = 13.38
 area_class_4 = 25.74
 
-lane_1_green_time = 5
+lane_1_class_count = [0, 0, 0, 0]
+lane_2_class_count = [0, 0, 0, 0]
+lane_3_class_count = [0, 0, 0, 0]
+lane_4_class_count = [0, 0, 0, 0]
+
+lane_1_green_time = 10
 lane_2_green_time = 10
-lane_3_green_time = 15
-lane_4_green_time = 20
+lane_3_green_time = 10
+lane_4_green_time = 10
 
 yellow_timer = 3
 
@@ -58,7 +63,7 @@ lane_3_red_time = lane_1_green_time + lane_2_green_time
 lane_4_red_time = lane_1_green_time + lane_2_green_time + lane_3_green_time
 
 
-colors = [(0, 0, 255), (0, 255, 255), (0, 255, 0)]  # Red, Yellow, Green
+colors = [(0, 0, 255), (0, 255, 255), (0, 255, 0), (0, 0, 100), (0, 100, 100),  (0, 100, 0),]  # Red, Yellow, Green
 traffic_light_width = 50
 traffic_light_height = 50
 
@@ -108,10 +113,10 @@ video_sources[0].set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 video_sources[0].set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 lane_mask = [
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK.png'),
-    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK NEW.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK NEW.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK NEW.png'),
+    cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK NEW.png'),
 ]
 
 model = YOLO('../weights/train_data_version_5_map_94_best.pt')
@@ -192,7 +197,7 @@ def draw_lane_timer(img, lane):
         else:
             traffic_timer = f"{lane_4_red_time}"
 
-    cvzone.putTextRect(img, str(traffic_timer), (x + 11 * spacing, y + 300), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
+    cvzone.putTextRect(img, str(traffic_timer), (x + 11 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
 
 def draw_lane_density(img, i, percentage):
     traffic_density_text = f"Traffic Lane {i} Density: {percentage:.2f} %"
@@ -202,58 +207,84 @@ def draw_traffic_light(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
     if lane == 1:
         if lane_1_green_time > 3 and lane_1_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)
+                                # top-left  bottom-right 
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[2], thickness=-1)
             # light_pattern = 1
             # light_pattern_list.append(light_pattern)
         elif lane_1_green_time <= 3 and lane_1_green_time > 0 and lane_1_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1)
             # light_pattern = 2
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1)
+            
             # light_pattern = 3
             # light_pattern_list.append(light_pattern)
 
 
     elif lane == 2:
         if lane_2_green_time > 3 and lane_2_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)# RYG
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[2], thickness=-1)
             # light_pattern = 3
             # light_pattern_list.append(light_pattern)
         elif lane_2_green_time <= 3 and lane_2_green_time > 0 and lane_2_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1) 
             # light_pattern = 4
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1)   
             # light_pattern = 5
             # light_pattern_list.append(light_pattern)
 
     elif lane == 3:
         if lane_3_green_time > 3 and lane_3_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)# RYG
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[2], thickness=-1)
             # light_pattern = 5
             # light_pattern_list.append(light_pattern)
         elif lane_3_green_time <= 3 and lane_3_green_time > 0 and lane_3_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1) 
             # light_pattern = 6
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1) 
             # light_pattern = 7
             # light_pattern_list.append(light_pattern)
 
     elif lane == 4:
         if lane_4_green_time > 3 and lane_4_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[2], thickness=-1)# RYG
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[2], thickness=-1)
             # light_pattern = 7
             # light_pattern_list.append(light_pattern)
         elif lane_4_green_time <= 3 and lane_4_green_time > 0 and lane_4_red_time == 0:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[3], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[1], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1) 
             # light_pattern = 8
             # light_pattern_list.append(light_pattern)
         else:
-            cv2.rectangle(img, (1050, 200), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 0), colors[0], thickness=-1)
+            cv2.rectangle(img, (1150, 100), (1270, 200), colors[4], thickness=-1)
+            cv2.rectangle(img, (1150, 200), (1270, 300), colors[5], thickness=-1)
             # light_pattern = 1
             # light_pattern_list.append(light_pattern)
 
@@ -311,14 +342,14 @@ def calculate_red_light_timer(lane):
         return lane_1_green_time + lane_2_green_time + lane_3_green_time
 
 def lane_timer(focused_lane):
-    time.sleep(10)
+    time.sleep(5)
     global lane_1_green_time, lane_2_green_time, lane_3_green_time, lane_4_green_time
     global lane_1_red_time, lane_2_red_time, lane_3_red_time, lane_4_red_time, yellow_timer
     global traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density
     
     while True:
         time.sleep(1)  # Simulate the passing of time
-        
+        # print(focused_lane)
         if focused_lane == 1:
             if lane_1_green_time > 0:
                 lane_1_green_time -= 1
@@ -382,7 +413,7 @@ def set_ROI(img, lane_mask):
     results = model(imgRegion, stream=True, conf=confidence)
     return results
 
-def process_video(img, lane_mask, roi):
+def process_video(img, lane_mask, roi, lane):
     if roi:
         results = set_ROI(img, lane_mask)
     else:
@@ -390,7 +421,6 @@ def process_video(img, lane_mask, roi):
 
     class_values = [0] * 4
     total_units = 0
-
     for r in results:
         boxes = r.boxes
         for box in boxes:
@@ -415,6 +445,30 @@ def process_video(img, lane_mask, roi):
 
             draw_detection(img, box, cls, conf)
 
+        if lane == 1:
+            lane_1_class_count[0] = class_values[0]
+            lane_1_class_count[1] = class_values[1]  
+            lane_1_class_count[2] = class_values[2]  
+            lane_1_class_count[3] = class_values[3]
+
+        elif lane == 2:
+            lane_2_class_count[0] = class_values[0]
+            lane_2_class_count[1] = class_values[1]  
+            lane_2_class_count[2] = class_values[2]  
+            lane_2_class_count[3] = class_values[3]    \
+        
+        elif lane == 3:
+            lane_3_class_count[0] = class_values[0]
+            lane_3_class_count[1] = class_values[1]  
+            lane_3_class_count[2] = class_values[2]  
+            lane_3_class_count[3] = class_values[3] 
+
+        elif lane == 4:
+            lane_4_class_count[0] = class_values[0]
+            lane_4_class_count[1] = class_values[1]  
+            lane_4_class_count[2] = class_values[2]  
+            lane_4_class_count[3] = class_values[3] 
+
     return class_values, total_units
 
 def show_output(video_sources, unit_testing, roi):
@@ -432,7 +486,7 @@ def show_output(video_sources, unit_testing, roi):
                 imgRegion = cv2.bitwise_and(img, lane_mask[i])
                 ROI_imgList.append(imgRegion)
 
-            class_values, total_units = process_video(img, lane_mask[i], roi)
+            class_values, total_units = process_video(img, lane_mask[i], roi, i+1)
             source_values[i]['class_values'] = class_values
             source_values[i]['total_units'] = total_units
             
@@ -614,12 +668,33 @@ def generate_report(mydb, sql):
     date = now.day               # Date (1-31)
     month = now.month            # Month (1-12)
     year = now.year              # Year (e.g., 2024)
+    week = now.isocalendar()[1]      # ISO week number (1-53)
 
     for i in range(4):
+        lane_number = i + 1
+        density = source_values[i]['source_percentage']
+
+        # Determine class counts based on the lane number
+        if lane_number == 1:
+            class_1, class_2, class_3, class_4 = lane_1_class_count
+        elif lane_number == 2:
+            class_1, class_2, class_3, class_4 = lane_2_class_count
+        elif lane_number == 3:
+            class_1, class_2, class_3, class_4 = lane_3_class_count
+        elif lane_number == 4:
+            class_1, class_2, class_3, class_4 = lane_4_class_count
+
+        # Single query execution using selected values
         sql.execute("""
-            INSERT INTO report (minute, hour, day, date, month, year, lane, density)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (minute, hour, day, date, month, year, i + 1, source_values[i]['source_percentage'])) 
+            INSERT INTO report (minute, hour, day, date, week, month, year, lane, density, class_1, class_2, class_3, class_4)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )
+        """, (
+            minute, hour, day, date, week, month, year,
+            lane_number,
+            density,
+            class_1, class_2, class_3, class_4
+        ))
+        # print('done')
 
     sql.execute("""SELECT * FROM report ORDER BY id DESC LIMIT 4""")
     rows = sql.fetchall()
@@ -633,11 +708,11 @@ def generate_report(mydb, sql):
 
 #Traffic Light System
 def start_program():
-    threading.Thread(target=get_fps).start()
+    # threading.Thread(target=get_fps).start()
     threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
-    threading.Thread(target=change_light_pattern, args=(0,)).start()
+    # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
-    # threading.Thread(target=check_minute).start()
+    threading.Thread(target=check_minute).start()
 
 # UNIT TESTING
 
@@ -654,10 +729,10 @@ def unit_vehicle_classification_module():
     ]
 
     lane_mask = [
-        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK.png'),
-        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK.png'),
-        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK.png'),
-        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 1 MASK NEW.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 2 MASK NEW.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 3 MASK NEW.png'),
+        cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK NEW.png'),
     ]
 
     show_output(unit_video, 1, True)
