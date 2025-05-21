@@ -50,10 +50,12 @@ lane_2_class_count = [0, 0, 0, 0]
 lane_3_class_count = [0, 0, 0, 0]
 lane_4_class_count = [0, 0, 0, 0]
 
-lane_1_green_time = 10
-lane_2_green_time = 10
-lane_3_green_time = 10
-lane_4_green_time = 10
+time.sleep(10)
+
+lane_1_green_time = 0
+lane_2_green_time = 0
+lane_3_green_time = 0
+lane_4_green_time = 0
 
 yellow_timer = 3
 
@@ -94,8 +96,18 @@ detect_G = 17
 detect_B = 19
 fullscreen_size = (1920, 1080)
 
-traffic_lane_density = []
+traffic_lane_density = [0,0,0,0]
+traffic_light_lane_density = [0,0,0,0]
+calculated_traffic_light_timer = [0,0,0,0]
 
+counted_lane_1_class = [0, 0, 0, 0]
+counted_lane_2_class = [0, 0, 0, 0]
+counted_lane_3_class = [0, 0, 0, 0]
+counted_lane_4_class = [0, 0, 0, 0]
+
+
+
+red_light_updated = [False, False, False, False]
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 video_sources = [
@@ -165,43 +177,85 @@ def draw_lane_timer_one_line(img, lane):
 def draw_lane_timer(img, lane):
     traffic_timer = ""
 
+    # Inside your logic
     if lane == 1:
         if lane_1_green_time > 3 and lane_1_red_time == 0:
             traffic_timer = f"{lane_1_green_time - yellow_timer}"
+            red_light_updated[0] = False  # reset the flag
         elif lane_1_green_time < 3 and lane_1_green_time > 0:
             traffic_timer = f"{lane_1_green_time}"
+            red_light_updated[0] = False  # reset the flag
         else:
             traffic_timer = f"{lane_1_red_time}"
+            if not red_light_updated[0] and lane_1_green_time == 0:
+                traffic_light_lane_density[0] = traffic_lane_density[0]
+                calculated_traffic_light_timer[0] = calculate_timer(lane, traffic_light_lane_density[lane -1])
+                counted_lane_1_class[0] = lane_1_class_count
+                red_light_updated[0] = True  # mark as updated
 
-    if lane == 2:
+    elif lane == 2:
         if lane_2_green_time > 3 and lane_2_red_time == 0:
             traffic_timer = f"{lane_2_green_time - yellow_timer}"
+            red_light_updated[1] = False
         elif lane_2_green_time < 3 and lane_2_green_time > 0:
             traffic_timer = f"{lane_2_green_time}"
+            red_light_updated[1] = False
         else:
             traffic_timer = f"{lane_2_red_time}"
+            if not red_light_updated[1] and lane_2_green_time == 0:
+                traffic_light_lane_density[1] = traffic_lane_density[1]
+                calculated_traffic_light_timer[1] = calculate_timer(lane, traffic_light_lane_density[lane -1])
+                counted_lane_2_class[1] = lane_2_class_count
+                red_light_updated[1] = True
 
     elif lane == 3:
         if lane_3_green_time > 3 and lane_3_red_time == 0:
             traffic_timer = f"{lane_3_green_time - yellow_timer}"
+            red_light_updated[2] = False
         elif lane_3_green_time < 3 and lane_3_green_time > 0:
             traffic_timer = f"{lane_3_green_time}"
+            red_light_updated[2] = False
         else:
             traffic_timer = f"{lane_3_red_time}"
+            if not red_light_updated[2] and lane_3_green_time == 0:
+                traffic_light_lane_density[2] = traffic_lane_density[2]
+                calculated_traffic_light_timer[2] = calculate_timer(lane, traffic_light_lane_density[lane -1])
+                counted_lane_3_class[2] = lane_3_class_count
+                red_light_updated[2] = True
 
     elif lane == 4:
         if lane_4_green_time > 3 and lane_4_red_time == 0:
             traffic_timer = f"{lane_4_green_time - yellow_timer}"
+            red_light_updated[3] = False
         elif lane_4_green_time < 3 and lane_4_green_time > 0:
             traffic_timer = f"{lane_4_green_time}"
+            red_light_updated[3] = False
         else:
             traffic_timer = f"{lane_4_red_time}"
+            if not red_light_updated[3] and lane_4_green_time == 0:
+                traffic_light_lane_density[3] = traffic_lane_density[3]
+                calculated_traffic_light_timer[3] = calculate_timer(lane, traffic_light_lane_density[lane -1])   
+                counted_lane_4_class[3] = lane_4_class_count     
+                red_light_updated[3] = True
 
-    cvzone.putTextRect(img, str(traffic_timer), (x + 11 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
+
+    if int(traffic_timer) < 10:
+        cvzone.putTextRect(img, f"00{traffic_timer}", (x + 10 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
+    elif int(traffic_timer) > 10 and int(traffic_timer) <100:
+        cvzone.putTextRect(img, f"0{traffic_timer}", (x + 10 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
+    else:
+        cvzone.putTextRect(img, f"{traffic_timer}", (x + 10 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
+
 
 def draw_lane_density(img, i, percentage):
-    traffic_density_text = f"Traffic Lane {i} Density: {percentage:.2f} %"
+    traffic_density_text = f"Current Traffic Lane {i} Density: {percentage:.2f} %"
     cvzone.putTextRect(img, traffic_density_text, (x * 800, y + 625), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
+
+def draw_light_density_reference(img, i, traffic_light_lane_density):
+    calculated_traffic_density_text = f"Calculated Lane {i} Density: {traffic_light_lane_density[i]:.2f} %"
+    cvzone.putTextRect(img, calculated_traffic_density_text, (x * 800, y + 495), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
+    next_light_timer = f"Lane {i+1} Next Green Timer: {calculated_traffic_light_timer[i]}"
+    cvzone.putTextRect(img, next_light_timer, (x * 800, y + 575), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
 
 def draw_traffic_light(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
@@ -297,7 +351,37 @@ def draw_detection(img, box, cls, conf):
     cvzone.putTextRect(img, f'{class_names[cls]}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
     # cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(35, y1)), scale=text_scale, thickness=text_thickness, colorR=(detect_R, detect_G, detect_B))
 
+def draw_counted_vehicle_class(img, i):
+
+    for i in range(4):
+        if i == 0:
+            counted_class = counted_lane_1_class
+        elif i == 1:
+            counted_class = counted_lane_2_class
+        elif i == 2:
+            counted_class = counted_lane_3_class
+        elif i == 3:
+            counted_class = counted_lane_4_class
+
+        counted_vehicle_class_text = (
+            f"Class 1: {counted_class[0]}, "
+            f"Class 2: {counted_class[1]}, "
+            f"Class 3: {counted_class[2]}, "
+            f"Class 4: {counted_class[3]}"
+        )
+
+    cvzone.putTextRect(img, counted_vehicle_class_text, (x * 600, y + 455), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
+   
+
 #CALCULATION
+
+def print_output():
+    print("Lane 1 Class Count:", lane_1_class_count)
+    print("Lane 2 Class Count:", lane_2_class_count)
+    print("Lane 3 Class Count:", lane_3_class_count)
+    print("Lane 4 Class Count:", lane_4_class_count)
+    print("Traffic Lane Density:", traffic_lane_density)
+
 
 def calculate_timer(lane, density):
     if lane == 1:
@@ -393,6 +477,7 @@ def lane_timer(focused_lane):
                 focused_lane = 1
                 lane_4_green_time = calculate_timer(4, traffic_lane_density[3]) + yellow_timer
                 lane_4_red_time = calculate_red_light_timer(4)
+                red_light_updated = [False, False, False, False]
 
         # print(f"{output}")
     l   
@@ -502,6 +587,7 @@ def show_output(video_sources, unit_testing, roi):
             draw_traffic_light(imgList[i], i+1) #shows undelayed display output
             # draw_fps(imgList[i])
             set_traffic_light_patter(imgList[i], i+1)
+            
 
 
         initialize_traffic_light()
@@ -512,6 +598,8 @@ def show_output(video_sources, unit_testing, roi):
 
         for i in range(4):
             draw_lane_density(imgList[i], i+1, source_values[i]['source_percentage'])
+            draw_light_density_reference(imgList[i], i, traffic_light_lane_density)
+            # draw_counted_vehicle_class(imgList[i], i)
 
         stackedImg = cvzone.stackImages(imgList, 2, 0.4)
         resized_stackedImg = cv2.resize(stackedImg, fullscreen_size)
@@ -571,6 +659,7 @@ def start_bluetooth_connection():
         exit()
 
 def change_light_pattern(unit_test):
+    
     global light_pattern, traffic_light_pattern
     start_bluetooth_connection()
     
