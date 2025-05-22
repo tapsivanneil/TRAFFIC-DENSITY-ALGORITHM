@@ -23,15 +23,16 @@ mydb = mysql.connector.connect(
     password = "cavitestateuniversity"
 )
 
-sql = mydb.cursor()
-sql.execute("SHOW DATABASES")
-for x in sql:
-    print(x)
-sql.execute("USE traffic_density")
+# sql = mydb.cursor()
+# sql.execute("SHOW DATABASES")
+# for x in sql:
+#     print(x)
+# sql.execute("USE traffic_density")
 
 port = 'COM3'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
+ser = False
 
 light_pattern = 0
 light_pattern_list = []
@@ -53,6 +54,8 @@ lane_1_green_time = 5
 lane_2_green_time = 10
 lane_3_green_time = 15
 lane_4_green_time = 20
+
+yellow_timer = 3
 
 lane_1_red_time = 0
 lane_2_red_time = lane_1_green_time
@@ -101,14 +104,10 @@ video_sources = [
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-2.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-3.mp4'),
     # cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/video-source-4.mp4'),
-
-
     cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
     cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
     cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
     cv2.VideoCapture('C:/Users/tapsi/OneDrive/Desktop/yolo-algorithm/Trial Files/video-source/sample_2.mp4'),
-
-
 ]
 
 # model = YOLO('C:/xampp/htdocs/TRAFFIC-DENSITY-ALGORITHM/weights/vehicle-detection-3.pt')
@@ -135,17 +134,29 @@ def draw_lane_timer(img, lane):
     traffic_timer = ""
 
     if lane == 1:
-        traffic_timer = f"GREEN {lane_1_green_time} RED: {lane_1_red_time}"
+        if lane_1_green_time > 3:
+            traffic_timer = f"GREEN {lane_1_green_time - yellow_timer} RED: {lane_1_red_time}"
+        else:
+            traffic_timer = f"YELLOW {lane_1_green_time} RED: {lane_1_red_time}"
+
     elif lane == 2:
-        traffic_timer = f"GREEN {lane_2_green_time} RED: {lane_2_red_time}"
+        if lane_2_green_time > 3:
+            traffic_timer = f"GREEN {lane_2_green_time - yellow_timer} RED: {lane_2_red_time}"
+        else:
+            traffic_timer = f"YELLOW {lane_2_green_time} RED: {lane_2_red_time}"
 
     elif lane == 3:
-        traffic_timer = f"GREEN {lane_3_green_time} RED: {lane_3_red_time}"
+        if lane_3_green_time > 3:
+            traffic_timer = f"GREEN {lane_3_green_time - yellow_timer} RED: {lane_3_red_time}"
+        else:
+            traffic_timer = f"YELLOW {lane_3_green_time} RED: {lane_3_red_time}"
 
     elif lane == 4:
-        traffic_timer = f"GREEN {lane_4_green_time} RED: {lane_4_red_time}"
-        
-    
+        if lane_4_green_time > 3:
+            traffic_timer = f"GREEN {lane_4_green_time - yellow_timer} RED: {lane_4_red_time}"
+        else:
+            traffic_timer = f"YELLOW {lane_4_green_time} RED: {lane_4_red_time}"
+
     
     cvzone.putTextRect(img, traffic_timer, (x + 2 * 200, y + 125), scale=2, thickness=3, colorR=(0, 0, 0))
 
@@ -156,7 +167,7 @@ def draw_lane_density(img, percentage):
 def draw_traffic_light(img, lane):
     global light_pattern, light_pattern_list, traffic_light_pattern
     if lane == 1:
-        if lane_1_green_time >= 3 and lane_1_red_time == 0:
+        if lane_1_green_time > 3 and lane_1_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 1
             light_pattern_list.append(light_pattern)
@@ -171,7 +182,7 @@ def draw_traffic_light(img, lane):
 
 
     elif lane == 2:
-        if lane_2_green_time >= 3 and lane_2_red_time == 0:
+        if lane_2_green_time > 3 and lane_2_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             
             light_pattern_list.append(light_pattern)
@@ -185,7 +196,7 @@ def draw_traffic_light(img, lane):
             light_pattern_list.append(light_pattern)
 
     elif lane == 3:
-        if lane_3_green_time >= 3 and lane_3_red_time == 0:
+        if lane_3_green_time > 3 and lane_3_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 5
             light_pattern_list.append(light_pattern)
@@ -199,7 +210,7 @@ def draw_traffic_light(img, lane):
             light_pattern_list.append(light_pattern)
 
     elif lane == 4:
-        if lane_4_green_time >= 3 and lane_4_red_time == 0:
+        if lane_4_green_time > 3 and lane_4_red_time == 0:
             cv2.rectangle(img, (100, 100), (200 + traffic_light_width, 200 + traffic_light_height), colors[2], thickness= -1)  # RYG
             light_pattern = 7
             light_pattern_list.append(light_pattern)
@@ -222,7 +233,7 @@ def draw_fps(img):
 def calculate_timer(lane, density):
     if lane == 1:
         if density <= 33.333:
-            return 21
+            return 21 + yellow_timer
         elif density <= 66.666:
             return 42
         else:
@@ -264,7 +275,7 @@ def calculate_red_light_timer(lane):
 def lane_timer(focused_lane):
     time.sleep(10)
     global lane_1_green_time, lane_2_green_time, lane_3_green_time, lane_4_green_time
-    global lane_1_red_time, lane_2_red_time, lane_3_red_time, lane_4_red_time
+    global lane_1_red_time, lane_2_red_time, lane_3_red_time, lane_4_red_time, yellow_timer
     global traffic_lane_1_density, traffic_lane_2_density, traffic_lane_3_density, traffic_lane_4_density
     
     while True:
@@ -278,7 +289,7 @@ def lane_timer(focused_lane):
                 lane_4_red_time -= 1
             else:
                 focused_lane = 2
-                lane_1_green_time = calculate_timer(1, traffic_lane_1_density)
+                lane_1_green_time = calculate_timer(1, traffic_lane_1_density) + yellow_timer
                 lane_1_red_time = calculate_red_light_timer(1)
 
         elif focused_lane == 2:
@@ -289,7 +300,7 @@ def lane_timer(focused_lane):
                 lane_4_red_time -= 1
             else:
                 focused_lane = 3
-                lane_2_green_time = calculate_timer(2,traffic_lane_2_density)
+                lane_2_green_time = calculate_timer(2,traffic_lane_2_density) + yellow_timer
                 lane_2_red_time = calculate_red_light_timer(2)
 
         elif focused_lane == 3:
@@ -300,7 +311,7 @@ def lane_timer(focused_lane):
                 lane_4_red_time -= 1
             else:
                 focused_lane = 4
-                lane_3_green_time = calculate_timer(3, traffic_lane_3_density)
+                lane_3_green_time = calculate_timer(3, traffic_lane_3_density) + yellow_timer
                 lane_3_red_time = calculate_red_light_timer(3)
 
         elif focused_lane == 4:
@@ -311,15 +322,9 @@ def lane_timer(focused_lane):
                 lane_3_red_time -= 1
             else:
                 focused_lane = 1
-                lane_4_green_time = calculate_timer(4, traffic_lane_4_density)
+                lane_4_green_time = calculate_timer(4, traffic_lane_4_density) + yellow_timer
                 lane_4_red_time = calculate_red_light_timer(4)
 
-
-        output = (f"LANE 1: {'GREEN' if focused_lane == 1 else 'RED'} {lane_1_green_time if focused_lane == 1 else lane_1_red_time} | "
-                f"LANE 2: {'GREEN' if focused_lane == 2 else 'RED'} {lane_2_green_time if focused_lane == 2 else lane_2_red_time} | "
-                f"LANE 3: {'GREEN' if focused_lane == 3 else 'RED'} {lane_3_green_time if focused_lane == 3 else lane_3_red_time} | "
-                f"LANE 4: {'GREEN' if focused_lane == 4 else 'RED'} {lane_4_green_time if focused_lane == 4 else lane_4_red_time}")
-        
         # print(f"{output}")
     l   
 
@@ -435,18 +440,18 @@ def get_fps():
 # SEND SIGNAL TO ARDUINO
 
 def start_bluetooth_connection():
+    global ser
     try:
-        time.sleep(2)  # Wait for the connection to be established
+        ser = serial.Serial(port, baudrate, timeout=timeout)
+        time.sleep(2)  # Give time to establish
         print("Connected to HC-06")
+        return ser
     except serial.SerialException as e:
         print(f"Error connecting to Bluetooth module: {e}")
         exit()
 
 def change_light_pattern():
-    global light_pattern, traffic_light_pattern
-    
-    ser = serial.Serial(port, baudrate, timeout=timeout)
-
+    global light_pattern, traffic_light_pattern, ser
     try:
         while True:
             time.sleep(2)
@@ -488,7 +493,6 @@ def check_minute():
             last_minute = current_minute 
 
 def generate_report():
-    # print('minute has passed')
     now = datetime.now()
 
     minute = now.minute          # Minute (0-59)
