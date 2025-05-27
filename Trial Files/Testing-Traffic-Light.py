@@ -797,7 +797,7 @@ def generate_report(mydb, sql):
 
 #Traffic Light System
 def start_program():
-    # threading.Thread(target=get_fps).start()
+    threading.Thread(target=get_fps).start()
     threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
     # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
@@ -826,16 +826,16 @@ def unit_vehicle_classification_module():
 
     show_output(unit_video, 1, True)
 
-def unit_traffic_density_calculation_module(class_1_count, class_2_count, class_3_count, class_4_count, expected_result):
-    
+def unit_traffic_density_calculation_module(class_1_count, class_2_count, class_3_count, class_4_count, expected_result, lane_num):
+    lane_num = lane_num - 1
     print('UNIT TESTING - Traffic Density Calculation ')
-    source_values[0]['total_units'] = (class_1_count * area_class_1) + (class_2_count * area_class_2) + (class_3_count * area_class_3) + (class_4_count * area_class_4)
-    calculate_traffic_density(source_values, 0)
+    source_values[lane_num]['total_units'] = (class_1_count * area_class_1) + (class_2_count * area_class_2) + (class_3_count * area_class_3) + (class_4_count * area_class_4)
+    calculate_traffic_density(source_values, lane_num)
 
-    if (round(source_values[0]['source_percentage'],2) == expected_result):
-        print(f"PASS, Expected Result: {expected_result}, Actual Result: {round(source_values[0]['source_percentage'],2)}")
+    if (round(source_values[lane_num]['source_percentage'],2) == expected_result):
+        print(f"PASS, Expected Result: {expected_result}, Actual Result: {round(source_values[lane_num]['source_percentage'],2)}")
     else:
-        print(f"FAIL, Expected Result: {expected_result}, Actual Result: {round(source_values[0]['source_percentage'],2)}")
+        print(f"FAIL, Expected Result: {expected_result}, Actual Result: {round(source_values[lane_num]['source_percentage'],2)}")
 
 def unit_traffic_light_module(lane_1_density, lane_2_density, lane_3_density, lane_4_density, 
                               expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer,
@@ -907,10 +907,10 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
 # 0000: 10, All Off
 # 1111: 11, All On
 
-start_program() #this is to start the whole program
+# start_program() #this is to start the whole program
 
 # UNIT TESTING 
-# unit_traffic_density_calculation_module(1,3,0,0,39.14)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
+unit_traffic_density_calculation_module(5,2,2,1,39.14, 1)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
 # unit_traffic_light_module(28,15,35,10,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
 # unit_vehicle_classification_module()
 # unit_traffic_light_control_module(1) # 1 is for triggering the unit testing 
