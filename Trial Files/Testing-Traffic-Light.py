@@ -8,9 +8,11 @@ import threading
 import logging
 import os
 import serial
+import numpy as np
 import mysql.connector
 import time
 from datetime import datetime
+import datetime
 
 # This removes the output of ultralytics
 logging.getLogger('ultralytics').setLevel(logging.WARNING)
@@ -19,7 +21,7 @@ logging.getLogger('ultralytics').setLevel(logging.WARNING)
 mydb = False
 sql = False
 
-port = 'COM3'  # Replace with your port if different
+port = 'COM7'  # Replace with your port if different
 baudrate = 9600  # Standard baud rate for HC-06
 timeout = 1
 
@@ -105,7 +107,9 @@ counted_lane_2_class = [0, 0, 0, 0]
 counted_lane_3_class = [0, 0, 0, 0]
 counted_lane_4_class = [0, 0, 0, 0]
 
-
+target_brightness = 110
+min_gain = 0.5
+max_gain = 3.0
 
 red_light_updated = [False, False, False, False]
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -115,10 +119,10 @@ video_sources = [
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
     # cv2.VideoCapture(0, cv2.CAP_DSHOW),
-    cv2.VideoCapture('Trial Files/video-source/lane_1.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/lane_2.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/lane_3.mp4'),
-    cv2.VideoCapture('Trial Files/video-source/lane_4.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/night_lane_1.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/night_lane_2.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/night_lane_3.mp4'),
+    cv2.VideoCapture('Trial Files/video-source/night_lane_4.mp4'),
 ]
 
 video_sources[0].set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -131,8 +135,18 @@ lane_mask = [
     cv2.imread('Trial Files/Traffic Light System - ROI/LANE 4 MASK NEW.png'),
 ]
 
-model = YOLO('../weights/train_data_version_5_map_94_best.pt')
+model = YOLO('../weights/train_data_version_5_1.pt')
 class_names = ["Class 1", "Class 2", "Class 3", "Class 4"]
+
+
+#  IMAGE PROCESSING
+
+def get_average_brightness(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return np.mean(gray)
+
+def adjust_brightness(frame, gain):
+    return cv2.convertScaleAbs(frame, alpha=gain, beta=0)
 
 # DISPLAY
 
@@ -245,7 +259,6 @@ def draw_lane_timer(img, lane):
         cvzone.putTextRect(img, f"0{traffic_timer}", (x + 10 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
     else:
         cvzone.putTextRect(img, f"{traffic_timer}", (x + 10 * spacing, y + 400), scale=8, thickness=text_thickness +2 , colorR=(text_R, text_G, text_B), offset=30)
-
 
 def draw_lane_density(img, i, percentage):
     traffic_density_text = f"Current Traffic Lane {i} Density: {percentage:.2f} %"
@@ -372,6 +385,43 @@ def draw_counted_vehicle_class(img, i):
 
     cvzone.putTextRect(img, counted_vehicle_class_text, (x * 600, y + 455), scale=text_scale, thickness=text_thickness, colorR=(text_R, text_G, text_B))
    
+def draw_image_brightness(adjusted_frame, height, wdth, gain, avg_brightness):
+                
+         # Brightness text at bottom
+        text1 = f'Brightness: {avg_brightness:.2f}'
+        (text_width1, text_height1), _ = cv2.getTextSize(text1, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+        cv2.rectangle(adjusted_frame, (10 - 5, height - 35 - text_height1 - 5),
+                    (10 + text_width1 + 5, height - 35 + 5), (0, 0, 0), -1)
+        cv2.putText(adjusted_frame, text1, (10, height - 35),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+        # Gain text just below it
+        text2 = f'Gain: {gain:.2f}'
+        (text_width2, text_height2), _ = cv2.getTextSize(text2, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+        cv2.rectangle(adjusted_frame, (10 - 5, height - 10 - text_height2 - 5),
+                    (10 + text_width2 + 5, height - 10 + 5), (0, 0, 0), -1)
+        cv2.putText(adjusted_frame, text2, (10, height - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+def draw_time_stamp(img):
+    now = datetime.datetime.now()
+    timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S") 
+    # print(timestamp_str)
+
+    height, width = img.shape[:2]
+    pos_x = 890  
+    pos_y = 50   
+
+    cvzone.putTextRect(
+        img,
+        timestamp_str,
+        (pos_x, pos_y),
+        scale=0.6,
+        thickness=text_thickness,
+        colorR=(text_R, text_G, text_B), 
+        colorT=(255, 255, 255),            
+        font=cv2.FONT_HERSHEY_SIMPLEX
+    )
 
 #CALCULATION
 
@@ -381,7 +431,6 @@ def print_output():
     print("Lane 3 Class Count:", lane_3_class_count)
     print("Lane 4 Class Count:", lane_4_class_count)
     print("Traffic Lane Density:", traffic_lane_density)
-
 
 def calculate_timer(lane, density):
     if lane == 1:
@@ -567,16 +616,28 @@ def show_output(video_sources, unit_testing, roi):
             if not success:
                 break
 
-            if roi: 
+            avg_brightness = get_average_brightness(img)
+            if avg_brightness < 1:
+                avg_brightness = 1.0
+
+            gain = target_brightness / avg_brightness
+            gain = max(min_gain, min(max_gain, gain))
+
+            adjusted_frame = adjust_brightness(img, gain)
+            height, width = adjusted_frame.shape[:2]
+
+            draw_image_brightness(adjusted_frame, height, width, gain, avg_brightness)
+
+            if roi:
                 imgRegion = cv2.bitwise_and(img, lane_mask[i])
                 ROI_imgList.append(imgRegion)
 
-            class_values, total_units = process_video(img, lane_mask[i], roi, i+1)
+            class_values, total_units = process_video(adjusted_frame, lane_mask[i], roi, i+1)
             source_values[i]['class_values'] = class_values
             source_values[i]['total_units'] = total_units
-            
-            imgList.append(img)
-            
+
+            imgList.append(adjusted_frame)
+
             calculate_traffic_density(source_values, i)
             set_fps()
             
@@ -587,7 +648,7 @@ def show_output(video_sources, unit_testing, roi):
             draw_traffic_light(imgList[i], i+1) #shows undelayed display output
             # draw_fps(imgList[i])
             set_traffic_light_patter(imgList[i], i+1)
-            
+            draw_time_stamp(imgList[i])
 
 
         initialize_traffic_light()
@@ -797,11 +858,11 @@ def generate_report(mydb, sql):
 
 #Traffic Light System
 def start_program():
-    threading.Thread(target=get_fps).start()
+    # threading.Thread(target=get_fps).start()
     threading.Thread(target=show_output, args=(video_sources, 0, True)).start()
     # threading.Thread(target=change_light_pattern, args=(0,)).start()
     threading.Thread(target=lane_timer, args=(1,)).start()
-    threading.Thread(target=check_minute).start()
+    # threading.Thread(target=check_minute).start()
 
 # UNIT TESTING
 
@@ -907,10 +968,10 @@ def unit_traffic_density_report_module(lane_1_density, lane_2_density, lane_3_de
 # 0000: 10, All Off
 # 1111: 11, All On
 
-# start_program() #this is to start the whole program
+start_program() #this is to start the whole program
 
 # UNIT TESTING 
-unit_traffic_density_calculation_module(5,2,2,1,39.14, 1)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
+# unit_traffic_density_calculation_module(5,2,2,1,39.14, 1)  #class_1_count, class_2_count, class_3_count, class_4_count, expected_result
 # unit_traffic_light_module(28,15,35,10,5,6,7,8,9,10,11,12)  # lane_1_density, lane_2_density, lane_3_density, lane_4_density, expected_lane_1_green_timer, expected_lane_2_green_timer, expected_lane_3_green_timer, expected_lane_4_green_timer, expected_lane_1_red_timer, expected_lane_2_red_timer, expected_lane_3_red_timer, expected_lane_4_red_timer
 # unit_vehicle_classification_module()
 # unit_traffic_light_control_module(1) # 1 is for triggering the unit testing 
